@@ -1,10 +1,11 @@
 import glob
-import multiprocessing
 import time
 
 import dask
 import numpy as np
 import pandas as pd
+from dask import delayed
+from distributed import LocalCluster, Client
 from joblib import parallel_backend
 from scipy.stats import zscore
 from sklearn.cluster import DBSCAN, OPTICS
@@ -13,8 +14,6 @@ from sklearn.ensemble import IsolationForest
 from sklearn.metrics import f1_score, accuracy_score, precision_score, average_precision_score
 from sklearn.neighbors import LocalOutlierFactor
 from sklearn.svm import OneClassSVM
-from distributed import LocalCluster, Client
-from dask import delayed
 
 
 class ZScore(object):
@@ -41,22 +40,17 @@ class ZScore(object):
         return self.y_predicted
 
 
-def train(data_frame, space, dataset_path):
+def detect(X, space):
+    """
+    Detect outliers
+    """
     start_time = time.time()
     print("==================================================")
     print("Outlier detection and treatment started ...")
     print("Space:", space)
-    print("Label column name:", data_frame.columns[-1])
-
-    y = data_frame['label']
-    X = data_frame.drop(['label'], axis=1)
-
-    y_counts = y.value_counts()
-    outlier_percentage = (y_counts.loc[0.0] / y_counts.sum()) * 100
 
     y_predicted = None
     params = space['params']
-    fake_vote = 0
     error = dict()
 
     try:
@@ -100,32 +94,69 @@ def train(data_frame, space, dataset_path):
     except Exception as e:
         print("Error:", e)
         y_predicted = [0] * data_frame.shape[0]
-        error['detect_n_treat_outliers___' + str(space)] = e
-        fake_vote += 1
+        error['detect_' + str(space)] = e
 
     if isinstance(y_predicted, list):
         y_predicted = np.array(y_predicted)
 
-    print(y_predicted.shape, y.shape)
-
-    accuracy = accuracy_score(y_pred=y_predicted, y_true=y)
-    precision = precision_score(y_pred=y_predicted, y_true=y)
-    average_precision_score1 = average_precision_score(y_score=y_predicted, y_true=y)
-    f1_score1 = f1_score(y_pred=y_predicted, y_true=y)
-
-    print("Accuracy score:", accuracy_score(y_pred=y_predicted, y_true=y))
-    print("Precision score:", precision_score(y_pred=y_predicted, y_true=y))
-    print("Average Precision score:", average_precision_score(y_score=y_predicted, y_true=y))
-    print("F1 score:", f1_score(y_pred=y_predicted, y_true=y))
-    print("Outlier detection and/or treatment completed.")
-    print("==================================================\n")
-
     time_taken = time.time() - start_time
+    print("Time taken:", time_taken)
 
-    return {"accuracy": accuracy, "precision": precision, "average_precision_score": average_precision_score1,
-            "f1_score": f1_score1, "time_taken": time_taken, 'algorithm': space['model'], 'params': space['params'],
-            'outlier_percentage': outlier_percentage, 'samples': data_frame.shape[0], 'features': data_frame.shape[1],
-            "dataset_path": dataset_path,
+    return y_predicted
+
+
+def treat(X, y_preds, voting_percentage=0.6, threshold=0.1):
+    """
+    Treat outliers
+
+    y_preds: list of lists
+
+    1. Voting
+    2. Remove outliers with 60% or more voting
+
+    Don't remove more than 10% of values
+    """
+    df = pd.DataFrame(y_preds)
+    sum_ = df.sum(axis=1, skipna=True)
+
+    rows_to_remove = []
+
+    for i, v in enumerate(sum_.tolist()):
+        if v > voting_percentage * df.shape[1]:
+            rows_to_remove.append({"index": i, "confidence": voting_percentage * df.shape[1]})
+
+    nrows = X.shape[0]
+    rows_to_remove_df = pd.DataFrame(rows_to_remove)
+    if rows_to_remove_df.shape[0] > threshold * nrows:
+        # Select only 10% rows
+        rows_to_remove_df.sort_values('confidence', ascending=False).head((int)(threshold * nrows))
+
+    if rows_to_remove_df.shape[0] > 0:
+        X.drop(X.index[rows_to_remove_df['index']], inplace=True)
+
+    print(X.shape)
+    return X
+
+
+def calculate_scores(y_predicted, y_true):
+    """
+    Function to calculate different performance scores
+    """
+    accuracy = accuracy_score(y_pred=y_predicted, y_true=y_true)
+    precision = precision_score(y_pred=y_predicted, y_true=y_true)
+    average_precision_score1 = average_precision_score(y_score=y_predicted, y_true=y_true)
+    f1_score1 = f1_score(y_pred=y_predicted, y_true=y_true)
+
+    print("Accuracy score:", accuracy)
+    print("Precision score:", precision)
+    print("Average Precision score:", average_precision_score1)
+    print("F1 score:", f1_score1)
+    print("Outlier detection and/or treatment completed.")
+
+    return {"accuracy": accuracy,
+            "precision": precision,
+            "average_precision_score": average_precision_score1,
+            "f1_score": f1_score1,
             }
 
 
@@ -133,25 +164,41 @@ if __name__ == '__main__':
     c = LocalCluster(processes=False, n_workers=2, threads_per_worker=3)
     dask_client = Client(c)
 
-    # space = {"model": "DBSCAN",
-    #          "params": {"eps": 0.5, "min_samples": 5,
-    #                     "n_jobs": 3,
-    #                     "algorithm": 'ball_tree', "metric": 'haversine'}
-    #          }
-    # space = {"model": "zscore", "params": {"threshold": 3.5}}
-    space = {"model": "OPTICS", "params": {"n_jobs": 3}}
-
     delayed_tasks = []
-    for index, dataset_path in enumerate(glob.glob("datasets/csv/*.csv")):
+    for index, dataset_path in enumerate(glob.glob("datasets/csv/*.csv")[:1]):
+        spaces = [{"model": "zscore", "params": {}},
+                  {"model": "DBSCAN", "params": {}},
+                  # {"model": "OPTICS", "params": {}},
+                  {"model": "IsolationForest", "params": {}},
+                  {"model": "EllipticEnvelope", "params": {}},
+                  {"model": "OneClassSVM", "params": {}},
+                  {"model": "LocalOutlierFactor", "params": {}},
+                  ]
+
         data_frame = pd.read_csv(dataset_path)
+        print(data_frame.shape)
 
-        results = delayed(train)(data_frame, space, dataset_path)
+        try:
+            data_frame = data_frame.drop(['label'], axis=1, inplace=False)
+        except Exception as e:
+            print("Error:", e)
 
-        delayed_tasks.append(results)
+        delayed_list = []
+        for index, space in enumerate(spaces):
+             delayed_list.append(delayed(detect)(data_frame, space))
 
-    all_results = dask.compute(*delayed_tasks)
+        results = dask.compute(*delayed_list)
+        final_results = dict(zip(range(len(list(results))), results))
+        treated_dataframe = treat(data_frame, final_results)
 
-    print(list(all_results))
-
-    fdf = pd.DataFrame(list(all_results))
-    fdf.to_csv("results/{}.csv".format(time.time()))
+    # all_results = dask.compute(*delayed_tasks)
+    #
+    # print(list(all_results))
+    #
+    # treat(data_frame, all_results)
+    #
+    # fdf = pd.DataFrame(list(all_results))
+    # fdf.to_csv("results/{}.csv".format(time.time()))
+    #
+    # dask_client.close()
+    # c.close()

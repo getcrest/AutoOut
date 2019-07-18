@@ -3,3 +3,5 @@ venv
 db.sqlite3
 __pycache__/
 uploads/*
+app/outlier_treatment/datasets/*
+app/outlier_treatment/results/*
