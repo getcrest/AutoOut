@@ -1,15 +1,16 @@
-import glob
-import json
 import os
 import time
 
+import dask
+import pandas as pd
+from dask import delayed
 from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
-import pandas as pd
 
-from app.models import Dataset
+from app.models import Dataset, Experiment, Process, ProcessStatus
+from app.outlier_treatment.main import detect_all
 
 
 @csrf_exempt
@@ -33,6 +34,9 @@ def upload_file(request):
                     return JsonResponse({"status": "failure", "message": "No file found"})
 
                 # TODO: Check for file extension here
+                if not os.path.exists(settings.MEDIA_ROOT):
+                    os.makedirs(settings.MEDIA_ROOT)
+
                 file_name = "{}_{}".format(time.time(), file_name)
                 file_path = os.path.join(settings.MEDIA_ROOT, file_name)
                 fout = open(file_path, 'wb+')
@@ -46,7 +50,7 @@ def upload_file(request):
                 dataset = Dataset(path=file_name)
                 dataset.save()
 
-                return JsonResponse({'status': 'success', 'message': 'Image uploaded successfully',
+                return JsonResponse({'status': 'success', 'message': 'Data uploaded successfully',
                                      'file_path': file_name})
             except Exception as e:
                 return JsonResponse({'status': 'failure', 'message': 'Error:Upload failed:{}'.format(e)})
@@ -55,6 +59,41 @@ def upload_file(request):
     else:
         print(request)
         return JsonResponse({'status': 'failure', 'message': 'Invalid request'})
+
+
+@csrf_exempt
+def detect_outliers(request):
+    dataset = Dataset.objects.all().order_by('-created_at')[0]
+    file_path = dataset.path
+
+    # Create a detection experiment and start outlier detection
+    process = Process.objects.get(name='detection')
+    process_status = ProcessStatus.objects.get(name='treatment')
+    experiment = Experiment(dataset=dataset, process=process, process_status=process_status)
+    experiment.save()
+
+    results = delayed(detect_all)(file_path, experiment.id, settings.RESULTS_ROOT)
+    dask.compute(results)
+
+    return JsonResponse({'status': 'success', 'message': 'Detection started successfully'})
+
+
+@csrf_exempt
+def update_process_status(request):
+    experiment_id = request.POST.get('experiment_id', None)
+    process_id = request.POST.get('process_id', None)
+    process_status_id = request.POST.get('process_status_id', None)
+
+    if experiment_id is None or process_id is None or process_status_id is None:
+        print("Cannot update status")
+
+    experiment = Experiment.objects.get(pk=experiment_id)
+    process_status = ProcessStatus.objects.get(pk=process_status_id)
+
+    experiment.process_status = process_status
+    experiment.save()
+
+    return JsonResponse({'status': 'success', 'message': 'Status updated successfully'})
 
 
 @csrf_exempt

@@ -1,0 +1,15 @@
+[{
+    "model": "app.Process",
+    "pk": 1,
+    "fields": {
+      "name": "Detection"
+    }
+  },
+  {
+    "model": "app.Process",
+    "pk": 2,
+    "fields": {
+      "name": "Treatment"
+    }
+  }
+]

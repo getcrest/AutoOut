@@ -1,4 +1,6 @@
 import glob
+import json
+import os
 import time
 
 import dask
@@ -14,6 +16,8 @@ from sklearn.ensemble import IsolationForest
 from sklearn.metrics import f1_score, accuracy_score, precision_score, average_precision_score
 from sklearn.neighbors import LocalOutlierFactor
 from sklearn.svm import OneClassSVM
+
+from app.outlier_treatment.spaces import OUTLIER_SPACES
 
 
 class ZScore(object):
@@ -158,6 +162,26 @@ def calculate_scores(y_predicted, y_true):
             "average_precision_score": average_precision_score1,
             "f1_score": f1_score1,
             }
+
+
+def detect_all(file_path, experiment_id, results_path):
+    if file_path is not None:
+        raise Exception("File path is null")
+
+    data_frame = pd.read_csv(file_path)
+
+    delayed_list = []
+    for _, space in enumerate(OUTLIER_SPACES):
+        delayed_list.append(delayed(detect)(data_frame, space))
+
+    results = dask.compute(*delayed_list)
+    final_results = dict(zip(range(len(list(results))), results))
+
+    # Store final results
+    with open(os.path.join(results_path, 'detection_results_{}.json'.format(experiment_id), "w")) as fp:
+        json.dump(final_results, fp)
+
+    # Update experiment status
 
 
 if __name__ == '__main__':

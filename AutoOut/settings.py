@@ -139,3 +139,4 @@ CELERY_TIMEZONE = 'Asia/India'
 CELERY_IMPORTS = ("app.tasks.train", )
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "uploads")
+RESULTS_ROOT = os.path.join(BASE_DIR, "results")

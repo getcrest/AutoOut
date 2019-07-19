@@ -1,0 +1,30 @@
+[
+  {
+    "model": "app.ProcessStatus",
+    "pk": 1,
+    "fields": {
+      "name": "Not Started"
+    }
+  },
+  {
+    "model": "app.ProcessStatus",
+    "pk": 2,
+    "fields": {
+      "name": "Running"
+    }
+  },
+  {
+    "model": "app.ProcessStatus",
+    "pk": 3,
+    "fields": {
+      "name": "Completed"
+    }
+  },
+  {
+    "model": "app.ProcessStatus",
+    "pk": 4,
+    "fields": {
+      "name": "Failed"
+    }
+  }
+]
