@@ -67,12 +67,11 @@ def detect_outliers(request):
     file_path = dataset.path
 
     # Create a detection experiment and start outlier detection
-    process = Process.objects.get(name='detection')
-    process_status = ProcessStatus.objects.get(name='treatment')
+    process = Process.objects.get(name='Detection')
+    process_status = ProcessStatus.objects.get(name='Running')
     experiment = Experiment(dataset=dataset, process=process, process_status=process_status)
     experiment.save()
-
-    results = delayed(detect_all)(file_path, experiment.id, settings.RESULTS_ROOT)
+    results = delayed(detect_all)(os.path.join(settings.MEDIA_ROOT, file_path), experiment.id, settings.RESULTS_ROOT)
     dask.compute(results)
 
     return JsonResponse({'status': 'success', 'message': 'Detection started successfully'})

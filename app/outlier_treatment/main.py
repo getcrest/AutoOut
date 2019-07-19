@@ -44,7 +44,7 @@ class ZScore(object):
         return self.y_predicted
 
 
-def detect(X, space):
+def detect(file_path, space):
     """
     Detect outliers
     """
@@ -52,6 +52,8 @@ def detect(X, space):
     print("==================================================")
     print("Outlier detection and treatment started ...")
     print("Space:", space)
+
+    X = pd.read_csv(file_path)
 
     y_predicted = None
     params = space['params']
@@ -97,7 +99,7 @@ def detect(X, space):
 
     except Exception as e:
         print("Error:", e)
-        y_predicted = [0] * data_frame.shape[0]
+        y_predicted = [0] * X.shape[0]
         error['detect_' + str(space)] = e
 
     if isinstance(y_predicted, list):
@@ -165,20 +167,26 @@ def calculate_scores(y_predicted, y_true):
 
 
 def detect_all(file_path, experiment_id, results_path):
-    if file_path is not None:
+    if file_path is None:
         raise Exception("File path is null")
 
-    data_frame = pd.read_csv(file_path)
+    # data_frame = pd.read_csv(file_path)
 
     delayed_list = []
     for _, space in enumerate(OUTLIER_SPACES):
-        delayed_list.append(delayed(detect)(data_frame, space))
+        delayed_list.append(delayed(detect)(file_path, space))
 
     results = dask.compute(*delayed_list)
+    results = [(r.tolist()) for r in list(results)]
     final_results = dict(zip(range(len(list(results))), results))
 
+
     # Store final results
-    with open(os.path.join(results_path, 'detection_results_{}.json'.format(experiment_id), "w")) as fp:
+
+    if not os.path.exists(results_path):
+        os.makedirs(results_path)
+
+    with open(os.path.join(results_path, 'detection_results_{}.json'.format(experiment_id)),"w") as fp:
         json.dump(final_results, fp)
 
     # Update experiment status

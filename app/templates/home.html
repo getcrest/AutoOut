@@ -10,7 +10,12 @@
 {% endblock %}
 
 {% block content %}
-    <h2 style="text-align:center;">AutoOut: Automated Outlier Treatment</h2>
+
+    <div style="text-align: center;padding: 1.5em;">
+        <h2 style="text-align:center;display: inline-block">AutoOut: Automated Outlier Treatment</h2>
+        <button class="btn btn-primary" id="detectButton" style="float: right; display: none;">Detect</button>
+    </div>
+
 
     <div id="drag-drop-area" style="width: 500px; height:300px; margin: auto;display: block;"></div>
 
@@ -70,7 +75,18 @@
                 rowHtml.append($("</tr>"));
                 dataTableView.find("tbody").append(rowHtml);
             }
+            $("#detectButton").show();
         }});
       })
+
+      $("#detectButton").click(()=>{
+          $.ajax({
+              url: "/app/outliers/detect", success: function (result) {
+                  console.log("RESULTS");
+                  console.log(result);
+              }
+          })
+      }
+      )
     </script>
 {% endblock %}
