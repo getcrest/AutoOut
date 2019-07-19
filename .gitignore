@@ -5,3 +5,6 @@ __pycache__/
 uploads/*
 app/outlier_treatment/datasets/*
 app/outlier_treatment/results/*
+dask-worker-space/
+results/
+app/outlier_treatment/dask-worker-space/

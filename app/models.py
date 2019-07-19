@@ -43,6 +43,7 @@ class Experiment(models.Model):
     process = models.ForeignKey(Process, on_delete=models.CASCADE)
     process_status = models.ForeignKey(ProcessStatus, on_delete=models.CASCADE)
     results_path = models.TextField(default="")
+    treated_file_path = models.TextField(default="")
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:

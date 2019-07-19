@@ -15,9 +15,30 @@ from sklearn.covariance import EllipticEnvelope
 from sklearn.ensemble import IsolationForest
 from sklearn.metrics import f1_score, accuracy_score, precision_score, average_precision_score
 from sklearn.neighbors import LocalOutlierFactor
+from sklearn.preprocessing import LabelEncoder, Normalizer
 from sklearn.svm import OneClassSVM
+import requests
 
 from app.outlier_treatment.spaces import OUTLIER_SPACES
+
+
+def encode_data(data_frame):
+    for column_name in data_frame.columns:
+        if str(data_frame[column_name].dtype) == 'object':
+            label_encoder = LabelEncoder()
+            data_frame[column_name] = label_encoder.fit_transform(data_frame[column_name])
+    return data_frame
+
+
+def data_cleaning_formatting(X):
+    # Basic cleaning
+    X = X.fillna(0)
+    X = X.fillna('ffill')
+
+    # Encode data
+    X = encode_data(X)
+    X = Normalizer().fit_transform(X)
+    return X
 
 
 class ZScore(object):
@@ -44,6 +65,7 @@ class ZScore(object):
         return self.y_predicted
 
 
+# TODO: Put errors in the returned data
 def detect(file_path, space):
     """
     Detect outliers
@@ -54,6 +76,9 @@ def detect(file_path, space):
     print("Space:", space)
 
     X = pd.read_csv(file_path)
+
+    # Basic data cleaning
+    X = data_cleaning_formatting(X)
 
     y_predicted = None
     params = space['params']
@@ -111,7 +136,7 @@ def detect(file_path, space):
     return y_predicted
 
 
-def treat(X, y_preds, voting_percentage=0.6, threshold=0.1):
+def treat(file_path, y_preds, experiment_id, media_root, voting_percentage=0.6, threshold=0.1):
     """
     Treat outliers
 
@@ -122,8 +147,37 @@ def treat(X, y_preds, voting_percentage=0.6, threshold=0.1):
 
     Don't remove more than 10% of values
     """
+    X = pd.read_csv(file_path)
+
+    try:
+        rows_to_remove_df = get_final_outliers(y_preds, voting_percentage=voting_percentage, threshold=threshold)
+
+        if rows_to_remove_df.shape[0] > 0:
+            X.drop(X.index[rows_to_remove_df['index']], inplace=True)
+
+        treated_file_path = os.path.join(media_root, "cleaned_csv_{}.csv".format(experiment_id))
+        X.to_csv(treated_file_path)
+
+        # Update server
+        data = {'experiment_id': experiment_id,
+                'treated_file_path': treated_file_path,
+                "process_status_id": 3}
+        update_server(data)
+
+    except Exception as e:
+        print("Error:", e)
+        data = {'experiment_id': experiment_id,
+                "process_status_id": 4}
+        update_server(data)
+
+
+def get_final_outliers(y_preds, voting_percentage=0.6, threshold=0.1):
+    """
+    Apply voting and threshold to get rows to remove
+    """
     df = pd.DataFrame(y_preds)
     sum_ = df.sum(axis=1, skipna=True)
+    nrows = df.shape[0]
 
     rows_to_remove = []
 
@@ -131,17 +185,12 @@ def treat(X, y_preds, voting_percentage=0.6, threshold=0.1):
         if v > voting_percentage * df.shape[1]:
             rows_to_remove.append({"index": i, "confidence": voting_percentage * df.shape[1]})
 
-    nrows = X.shape[0]
     rows_to_remove_df = pd.DataFrame(rows_to_remove)
     if rows_to_remove_df.shape[0] > threshold * nrows:
         # Select only 10% rows
         rows_to_remove_df.sort_values('confidence', ascending=False).head((int)(threshold * nrows))
 
-    if rows_to_remove_df.shape[0] > 0:
-        X.drop(X.index[rows_to_remove_df['index']], inplace=True)
-
-    print(X.shape)
-    return X
+    return rows_to_remove_df
 
 
 def calculate_scores(y_predicted, y_true):
@@ -170,26 +219,42 @@ def detect_all(file_path, experiment_id, results_path):
     if file_path is None:
         raise Exception("File path is null")
 
-    # data_frame = pd.read_csv(file_path)
+    try:
+        delayed_list = []
+        for _, space in enumerate(OUTLIER_SPACES):
+            delayed_list.append(delayed(detect)(file_path, space))
 
-    delayed_list = []
-    for _, space in enumerate(OUTLIER_SPACES):
-        delayed_list.append(delayed(detect)(file_path, space))
+        results = dask.compute(*delayed_list)
+        results = [(r.tolist()) for r in list(results)]
+        final_results = dict(zip(range(len(list(results))), results))
 
-    results = dask.compute(*delayed_list)
-    results = [(r.tolist()) for r in list(results)]
-    final_results = dict(zip(range(len(list(results))), results))
+        # Store final results
+
+        if not os.path.exists(results_path):
+            os.makedirs(results_path)
+
+        file_name = 'detection_results_{}.json'.format(experiment_id)
+        results_file_path = os.path.join(results_path, file_name)
+
+        with open(results_file_path, "w") as fp:
+            json.dump(final_results, fp)
+
+        # Update server
+        data = {'experiment_id':experiment_id,
+                'results_file_path': file_name,
+                "process_status_id": 3}
+        update_server(data)
+    except Exception as e:
+        print("Error:", e)
+        data = {'experiment_id': experiment_id,
+                "process_status_id": 4}
+        update_server(data)
 
 
-    # Store final results
-
-    if not os.path.exists(results_path):
-        os.makedirs(results_path)
-
-    with open(os.path.join(results_path, 'detection_results_{}.json'.format(experiment_id)),"w") as fp:
-        json.dump(final_results, fp)
-
-    # Update experiment status
+def update_server(data):
+    endpoint = "http://127.0.0.1:8000/app/status/update"
+    r = requests.post(url=endpoint, data=data)
+    print(r.status_code)
 
 
 if __name__ == '__main__':
