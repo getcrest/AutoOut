@@ -42,7 +42,7 @@ def data_cleaning_formatting(X):
 
 
 class ZScore(object):
-    def __init__(self, threshold):
+    def __init__(self, threshold=3.5):
         self.threshold = threshold
         self.y_predicted = list()
 
