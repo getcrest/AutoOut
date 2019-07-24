@@ -79,7 +79,7 @@ def detect_outliers(request):
 
 
 @csrf_exempt
-def update_process_status(request):
+def update_experiment_status(request):
     experiment_id = request.POST.get('experiment_id', None)
     process_status_id = request.POST.get('process_status_id', None)
     results_file_path = request.POST.get('results_file_path', None)
@@ -144,33 +144,51 @@ def get_outliers(request):
 
 @csrf_exempt
 def treat_outliers(request):
-    experiment_id = request.POST.get("experiment_id")
+    if request.method == 'POST':
+        experiment_id = request.POST.get("experiment_id")
 
-    if experiment_id is None:
-        return JsonResponse({"status": "success", "message": 'Experiment id is missing'})
+        if experiment_id is None:
+            return JsonResponse({"status": "success", "message": 'Experiment id is missing'})
 
-    experiment = Experiment.objects.get(pk=experiment_id)
-    results_file_path = os.path.join(settings.RESULTS_ROOT, experiment.results_path)
+        experiment = Experiment.objects.get(pk=experiment_id)
+        results_file_path = os.path.join(settings.RESULTS_ROOT, experiment.results_path)
 
-    if experiment.process_status_id == 2:
-        return JsonResponse({'status': 'success', 'message': 'Experiment is still running. Please wait for sometime'})
+        if experiment.process_status_id == 2:
+            return JsonResponse({'status': 'success', 'message': 'Experiment is still running. Please wait for sometime'})
 
-    try:
-        with open(results_file_path, "r") as fp:
-            outliers = json.load(fp)
-            final_outliers = get_final_outliers(outliers)
+        try:
+            with open(results_file_path, "r") as fp:
+                outliers = json.load(fp)
+                final_outliers = get_final_outliers(outliers)
 
-            process = Process.objects.get(name='Treatment')
-            process_status = ProcessStatus.objects.get('Running')
-            experiment2 = Experiment(dataset=experiment.dataset, process=process, process_status=process_status)
-            experiment2.save()
+                process = Process.objects.get(name='Treatment')
+                process_status = ProcessStatus.objects.get('Running')
+                experiment2 = Experiment(dataset=experiment.dataset, process=process, process_status=process_status)
+                experiment2.save()
 
-            results = delayed(treat)(os.path.join(settings.MEDIA_ROOT, experiment2.dataset.path),
-                                     final_outliers, experiment2.id)
-            dask.compute(results)
+                results = delayed(treat)(os.path.join(settings.MEDIA_ROOT, experiment2.dataset.path),
+                                         final_outliers, experiment2.id)
+                dask.compute(results)
 
-            return JsonResponse(
-                {"status": "success", "message": "Outlier treatment started", "experiment_id": experiment2.id})
-    except Exception as e:
-        print("Exception:", e)
-        return JsonResponse({'status': "failure", "message": "Error"})
+                return JsonResponse(
+                    {"status": "success", "message": "Outlier treatment started", "experiment_id": experiment2.id})
+        except Exception as e:
+            print("Exception:", e)
+            return JsonResponse({'status': "failure", "message": "Error"})
+    else:
+        return JsonResponse({'status': "failure", "message": "Invalid request"})
+
+
+@csrf_exempt
+def get_experiment_status(request):
+    if request.method == 'POST':
+        experiment_id = request.POST.get("experiment_id")
+
+        if experiment_id is None:
+            return JsonResponse({"status": "success", "message": 'Experiment id is missing'})
+
+        experiment = Experiment.objects.get(pk=experiment_id)
+
+        return JsonResponse({"status":"success", "experiment_stauts": experiment.process_status.name})
+    else:
+        return JsonResponse({'status': "failure", "message": "Invalid request"})
