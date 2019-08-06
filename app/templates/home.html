@@ -18,6 +18,7 @@
         </button>
         <button class="btn btn-primary" id="detectButton" style="float: right; display: none;">Detect</button>
         <button class="btn btn-primary" id="treatButton" style="float: right; display: none;">Treat</button>
+        <a class="btn btn-primary" id="downloadButton" style="float: right; display: none;">Download</a>
     </div>
 
 
@@ -36,6 +37,7 @@
 
     <script src="https://transloadit.edgly.net/releases/uppy/v1.2.0/uppy.min.js"></script>
     <script>
+        var outlierArray = [];
         var experiment_id;
         var uppy = Uppy.Core({
             autoProceed: true,
@@ -123,8 +125,8 @@
                                                 console.log(result);
 
                                                 var outliers = result['outliers'];
-
-                                                
+                                                outlierArray = outliers;
+                                                fillTable();
                                             },
                                             failure: function (result) {
                                                 $("#loadingButton").hide();
@@ -160,7 +162,8 @@
                 contentType: "application/json",
                 success: function (result) {
                     console.log("Treat Results");
-                    console.log(result);
+                    console.log(result.experiment_id);
+                    let treatment_expr_id = result.experiment_id;
                     var pollId = setInterval(() => {
                         $.ajax({
                             url: "/app/status/get",
@@ -174,7 +177,8 @@
                                     clearInterval(pollId);
                                     $("#loadingButton").hide();
                                     //$("#treatButton").show();
-                                    fillTable();
+                                    $("#downloadButton").show();
+                                    $("#downloadButton").attr("href", `/app/file/download?experiment_id=${treatment_expr_id}`)
                                 }
                             },
                             failure: function (result) {
@@ -205,12 +209,18 @@
                         headHtml.append("<th>" + keys[i] + "</th>");
                     }
                     headHtml.append("</tr>");
-                    dataTableView.find("thead").append(headHtml);
+                    dataTableView.find("thead").html(headHtml);
 
                     // Fill values
+                    dataTableView.find("tbody").html('');
                     for (let i = 0; i < results.length; i++) {
                         let result1 = results[i];
-                        let rowHtml = $("<tr>");
+                        let rowHtml;
+                        if(outlierArray.includes(i)) {
+                            rowHtml = $("<tr style='background-color:red; color:white'>");
+                        } else {
+                            rowHtml = $("<tr>");
+                        }
                         for (let j = 0; j < keys.length; j++) {
                             //console.log(result1[keys[j]]);
                             rowHtml.append($("<td>" + result1[keys[j]] + "</td>"));
