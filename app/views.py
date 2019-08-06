@@ -6,9 +6,10 @@ import dask
 import pandas as pd
 from dask import delayed
 from django.conf import settings
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
+from django.views.static import serve
 
 from app.models import Dataset, Experiment, Process, ProcessStatus
 from app.outlier_treatment.main import detect_all, get_final_outliers, treat
@@ -192,3 +193,24 @@ def get_experiment_status(request):
         return JsonResponse({"status":"success", "experiment_stauts": experiment.process_status.name})
     else:
         return JsonResponse({'status': "failure", "message": "Invalid request"})
+
+
+@csrf_exempt
+def download_treated_file(request):
+    experiment_id = request.GET.get('experiment_id')
+
+    if experiment_id is None:
+        return JsonResponse({"status": "failure", "message": "Experiment id is missing"})
+
+    try:
+        experiment = Experiment.objects.get(pk=experiment_id)
+
+        treated_file_path = experiment.treated_file_path
+
+        if not os.path.exists(treated_file_path):
+            raise Http404("File not found.")
+
+        return serve(request, treated_file_path)
+    except Exception as e:
+        print("Error:", e)
+        return JsonResponse({'message': 'File not found'})

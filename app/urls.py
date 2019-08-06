@@ -10,5 +10,6 @@ urlpatterns = [
     url(r'^outliers/get$', views.get_outliers, name='get_outliers'),
     url(r'^outliers/treat$', views.treat_outliers, name='treat_outliers'),
     url(r'^status/update$', views.update_experiment_status, name='update_process_status'),
-    url(r'^status/get$', views.get_experiment_status, name='get_experiment_status')
+    url(r'^status/get$', views.get_experiment_status, name='get_experiment_status'),
+    url(r'^file/download$', views.download_treated_file, name='download_treated_file')
 ]
