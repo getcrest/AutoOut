@@ -4,9 +4,9 @@
 {% load render_table from django_tables2 %}
 
 {% block navigation %}
-<li class="nav-item">
-  <a class="nav-link" href="/app/help">Help</a>
-</li>
+    <li class="nav-item">
+        <a class="nav-link" href="/app/help">Help</a>
+    </li>
 {% endblock %}
 
 {% block content %}
@@ -14,7 +14,7 @@
     <div style="text-align: center;padding: 1.5em;">
         <h2 style="text-align:center;display: inline-block">AutoOut: Automated Outlier Treatment</h2>
         <button class="btn btn-primary buttonload" style="display: none;float: right;" id="loadingButton">
-            <i class="fa fa-circle-o-notch fa-spin" ></i><span id="loadingText"></span>
+            <i class="fa fa-circle-o-notch fa-spin"></i><span id="loadingText"></span>
         </button>
         <button class="btn btn-primary" id="detectButton" style="float: right; display: none;">Detect</button>
         <button class="btn btn-primary" id="treatButton" style="float: right; display: none;">Treat</button>
@@ -24,177 +24,204 @@
     <div id="drag-drop-area" style="width: 500px; height:300px; margin: auto;display: block;"></div>
 
     <div id="data-table-view" class="table-responsive" style="display: none">
-      <table class="table table-hover table-bordered">
-        <thead>
+        <table class="table table-hover table-bordered">
+            <thead>
 
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
 
-        </tbody>
-      </table>
+            </tbody>
+        </table>
     </div>
 
     <script src="https://transloadit.edgly.net/releases/uppy/v1.2.0/uppy.min.js"></script>
     <script>
-      var experiment_id;
-      var uppy = Uppy.Core({ autoProceed: true,
-          restrictions: {
-              maxFileSize: 1000000000,
-              maxNumberOfFiles: 1,
-              minNumberOfFiles: 1,
-              allowedFileTypes: ['text/csv']
+        var experiment_id;
+        var uppy = Uppy.Core({
+            autoProceed: true,
+            restrictions: {
+                maxFileSize: 1000000000,
+                maxNumberOfFiles: 1,
+                minNumberOfFiles: 1,
+                allowedFileTypes: ['text/csv']
             }
-          });
-      uppy.use(Uppy.Dashboard, { target: '#drag-drop-area', inline: true,
-          note: 'CSV, Hdf, Excel files only. We support tabular data only!' });
-      uppy.use(Uppy.XHRUpload, { endpoint: 'file/upload' });
+        });
+        uppy.use(Uppy.Dashboard, {
+            target: '#drag-drop-area', inline: true,
+            note: 'CSV, Hdf, Excel files only. We support tabular data only!'
+        });
+        uppy.use(Uppy.XHRUpload, {endpoint: 'file/upload'});
 
-      uppy.on('complete', (result) => {
-        console.log('Upload complete! We’ve uploaded these files:', result);
+        uppy.on('complete', (result) => {
+            console.log('Upload complete! We’ve uploaded these files:', result);
 
-        $("#drag-drop-area").css("display", "none");
-        $("#data-table-view").css("display", "block");
+            $("#drag-drop-area").css("display", "none");
+            $("#data-table-view").css("display", "block");
 
-        $.ajax({url: "/app/data/get", success: function(result){
-            let dataTableView = $("#data-table-view");
-            let results = JSON.parse(result);
-            console.log(results[0]);
+            $.ajax({
+                url: "/app/data/get", success: function (result) {
+                    let dataTableView = $("#data-table-view");
+                    let results = JSON.parse(result);
+                    console.log(results[0]);
 
-            // Fill column names
-            let headHtml = $("<tr>");
-            let keys = Object.keys(results[0]);
-            for(let i=0;i<keys.length;i++){
-                headHtml.append("<th>"+keys[i]+"</th>");
-            }
-            headHtml.append("</tr>");
-            dataTableView.find("thead").append(headHtml);
+                    // Fill column names
+                    let headHtml = $("<tr>");
+                    let keys = Object.keys(results[0]);
+                    for (let i = 0; i < keys.length; i++) {
+                        headHtml.append("<th>" + keys[i] + "</th>");
+                    }
+                    headHtml.append("</tr>");
+                    dataTableView.find("thead").append(headHtml);
 
-            // Fill values
-            for(let i = 0; i < results.length; i++){
-                let result1 = results[i];
-                let rowHtml = $("<tr>");
-                for(let j=0;j<keys.length;j++){
-                    //console.log(result1[keys[j]]);
-                    rowHtml.append($("<td>"+result1[keys[j]]+"</td>"));
+                    // Fill values
+                    for (let i = 0; i < results.length; i++) {
+                        let result1 = results[i];
+                        let rowHtml = $("<tr>");
+                        for (let j = 0; j < keys.length; j++) {
+                            //console.log(result1[keys[j]]);
+                            rowHtml.append($("<td>" + result1[keys[j]] + "</td>"));
+                        }
+                        rowHtml.append($("</tr>"));
+                        dataTableView.find("tbody").append(rowHtml);
+                    }
+                    $("#detectButton").show();
                 }
-                rowHtml.append($("</tr>"));
-                dataTableView.find("tbody").append(rowHtml);
-            }
-            $("#detectButton").show();
-        }});
-      })
+            });
+        });
 
-      $("#detectButton").click(()=>{
-          $("#detectButton").hide();
-          $("#loadingButton").show();
-          $("#loadingText").text("Detecting");
-          $.ajax({
-              url: "/app/outliers/detect", success: function (result) {
-                  console.log("RESULTS");
-                  console.log(result);
-                  experiment_id = result.experiment_id;
-                  var pollId = setInterval(()=>{
-                      $.ajax({
-                          url:"/app/status/get",
-                          method: "POST",
-                          data: JSON.stringify({
-                              "experiment_id": experiment_id
-                          }),
-                          success: function (result) {
-                              console.log(result);
-                              if(result.experiment_status === "Completed") {
-                                  clearInterval(pollId);
-                                  $("#loadingButton").hide();
-                                  $("#treatButton").show();
-                              }
-                          },
-                          failure: function (result) {
-                              $("#loadingButton").hide();
-                          }
-                      })
-                  }, 5000);
-              },
-              failure: function (result) {
-                  console.log("Failed to detect outliers");
-                  $("#loadingButton").hide();
-                  alert("Failed to detect outliers");
-              }
-          });
-      })
+        $("#detectButton").click(() => {
+            $("#detectButton").hide();
+            $("#loadingButton").show();
+            $("#loadingText").text("Detecting");
+            $.ajax({
+                url: "/app/outliers/detect", success: function (result) {
+                    console.log("RESULTS");
+                    console.log(result);
+                    experiment_id = result.experiment_id;
+                    var pollId = setInterval(() => {
+                        $.ajax({
+                            url: "/app/status/get",
+                            method: "POST",
+                            data: JSON.stringify({
+                                "experiment_id": experiment_id
+                            }),
+                            success: function (result) {
+                                console.log(result);
+                                if (result.experiment_status === "Completed") {
+                                    clearInterval(pollId);
+                                    $("#loadingButton").hide();
+                                    $("#treatButton").show();
 
-      $("#treatButton").click(()=>{
-          $("#loadingButton").show();
-          $("#loadingText").text("Treating");
-          $("#treatButton").hide();
-          $.ajax({
-              url: '/app/outliers/treat?',
-              method: 'POST',
-              data: JSON.stringify({
-                  experiment_id: experiment_id
-              }),
-              contentType: "application/json",
-              success: function (result) {
-                  console.log("Treat Results");
-                  console.log(result);
-                  var pollId = setInterval(()=>{
-                      $.ajax({
-                          url:"/app/status/get",
-                          method: "POST",
-                          data: JSON.stringify({
-                              "experiment_id": experiment_id
-                          }),
-                          success: function (result) {
-                              console.log(result);
-                              if(result.experiment_status === "Completed") {
-                                  clearInterval(pollId);
-                                  $("#loadingButton").hide();
-                                  //$("#treatButton").show();
-                                  fillTable();
-                              }
-                          },
-                          failure: function (result) {
-                              $("#loadingButton").hide();
-                          }
-                      })
-                  }, 5000);
-              },
-              failure: function (result) {
-                  console.log("Failed to treat outliers");
-                  $("#loadingButton").hide();
-                  alert("Failed to treat outliers");
-              }
-          })
-      })
+                                    // Colorize detected rows
+                                    $.ajax({
+                                            url: "/app/outliers/get",
+                                            method: "POST",
+                                            data: JSON.stringify({
+                                                "experiment_id": experiment_id
+                                            }),
+                                            success: function (result) {
+                                                console.log(result);
 
-      function fillTable() {
-            $.ajax({url: "/app/data/get", success: function(result){
-            let dataTableView = $("#data-table-view");
-            let results = JSON.parse(result);
-            console.log(results[0]);
+                                                var outliers = result['outliers'];
 
-            // Fill column names
-            let headHtml = $("<tr>");
-            let keys = Object.keys(results[0]);
-            for(let i=0;i<keys.length;i++){
-                headHtml.append("<th>"+keys[i]+"</th>");
-            }
-            headHtml.append("</tr>");
-            dataTableView.find("thead").append(headHtml);
-
-            // Fill values
-            for(let i = 0; i < results.length; i++){
-                let result1 = results[i];
-                let rowHtml = $("<tr>");
-                for(let j=0;j<keys.length;j++){
-                    //console.log(result1[keys[j]]);
-                    rowHtml.append($("<td>"+result1[keys[j]]+"</td>"));
+                                                
+                                            },
+                                            failure: function (result) {
+                                                $("#loadingButton").hide();
+                                            }
+                                        }
+                                    )
+                                }
+                            },
+                            failure: function (result) {
+                                $("#loadingButton").hide();
+                            }
+                        })
+                    }, 5000);
+                },
+                failure: function (result) {
+                    console.log("Failed to detect outliers");
+                    $("#loadingButton").hide();
+                    alert("Failed to detect outliers");
                 }
-                rowHtml.append($("</tr>"));
-                dataTableView.find("tbody").append(rowHtml);
-            }
-            {#$("#detectButton").show();#}
-        }});
-      }
+            });
+        });
+
+        $("#treatButton").click(() => {
+            $("#loadingButton").show();
+            $("#loadingText").text("Treating");
+            $("#treatButton").hide();
+            $.ajax({
+                url: '/app/outliers/treat?',
+                method: 'POST',
+                data: JSON.stringify({
+                    experiment_id: experiment_id
+                }),
+                contentType: "application/json",
+                success: function (result) {
+                    console.log("Treat Results");
+                    console.log(result);
+                    var pollId = setInterval(() => {
+                        $.ajax({
+                            url: "/app/status/get",
+                            method: "POST",
+                            data: JSON.stringify({
+                                "experiment_id": experiment_id
+                            }),
+                            success: function (result) {
+                                console.log(result);
+                                if (result.experiment_status === "Completed") {
+                                    clearInterval(pollId);
+                                    $("#loadingButton").hide();
+                                    //$("#treatButton").show();
+                                    fillTable();
+                                }
+                            },
+                            failure: function (result) {
+                                $("#loadingButton").hide();
+                            }
+                        })
+                    }, 5000);
+                },
+                failure: function (result) {
+                    console.log("Failed to treat outliers");
+                    $("#loadingButton").hide();
+                    alert("Failed to treat outliers");
+                }
+            })
+        });
+
+        function fillTable() {
+            $.ajax({
+                url: "/app/data/get", success: function (result) {
+                    let dataTableView = $("#data-table-view");
+                    let results = JSON.parse(result);
+                    console.log(results[0]);
+
+                    // Fill column names
+                    let headHtml = $("<tr>");
+                    let keys = Object.keys(results[0]);
+                    for (let i = 0; i < keys.length; i++) {
+                        headHtml.append("<th>" + keys[i] + "</th>");
+                    }
+                    headHtml.append("</tr>");
+                    dataTableView.find("thead").append(headHtml);
+
+                    // Fill values
+                    for (let i = 0; i < results.length; i++) {
+                        let result1 = results[i];
+                        let rowHtml = $("<tr>");
+                        for (let j = 0; j < keys.length; j++) {
+                            //console.log(result1[keys[j]]);
+                            rowHtml.append($("<td>" + result1[keys[j]] + "</td>"));
+                        }
+                        rowHtml.append($("</tr>"));
+                        dataTableView.find("tbody").append(rowHtml);
+                    }
+                    {#$("#detectButton").show();#}
+                }
+            });
+        }
 
     </script>
 {% endblock %}

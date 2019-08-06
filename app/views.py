@@ -10,6 +10,7 @@ from django.http import JsonResponse, Http404
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.static import serve
+from rest_framework.decorators import api_view
 
 from app.models import Dataset, Experiment, Process, ProcessStatus
 from app.outlier_treatment.main import detect_all, get_final_outliers, treat
@@ -122,7 +123,8 @@ def get_data(request):
 
 @csrf_exempt
 def get_outliers(request):
-    experiment_id = request.POST.get("experiment_id")
+    request_obj = json.loads(request.body.decode("utf-8"))
+    experiment_id = request_obj["experiment_id"]
 
     if experiment_id is None:
         return JsonResponse({"status": "success", "message": 'Experiment id is missing'})
@@ -137,7 +139,7 @@ def get_outliers(request):
         with open(results_file_path, "r") as fp:
             outliers = json.load(fp)
             final_outliers = get_final_outliers(outliers)
-            return JsonResponse({"status": "success", "outliers": final_outliers})
+            return JsonResponse({"status": "success", "outliers": final_outliers['index'].tolist()})
     except Exception as e:
         print("Exception:", e)
         return JsonResponse({'status': "failure", "message": "Error"})
@@ -196,6 +198,7 @@ def get_experiment_status(request):
 
 
 @csrf_exempt
+@api_view(['GET'])
 def download_treated_file(request):
     experiment_id = request.GET.get('experiment_id')
 
@@ -210,7 +213,7 @@ def download_treated_file(request):
         if not os.path.exists(treated_file_path):
             raise Http404("File not found.")
 
-        return serve(request, treated_file_path)
+        return serve(request, treated_file_path, document_root='/')
     except Exception as e:
         print("Error:", e)
         return JsonResponse({'message': 'File not found'})
