@@ -33,10 +33,23 @@
 
             </tbody>
         </table>
+
     </div>
+
+     <div id="tableNavigator" style="display: none;">
+         <br/>
+                <button class="btn btn-primary" style="float: left" onclick="previousPage()">Previous</button>
+                <button class="btn btn-primary" style="float: right" onclick="nextPage()">Next</button>
+          <br/>
+          <br/>
+     </div>
+
+
+
 
     <script src="https://transloadit.edgly.net/releases/uppy/v1.2.0/uppy.min.js"></script>
     <script>
+        var page_no = 1;
         var outlierArray = [];
         var experiment_id;
         var uppy = Uppy.Core({
@@ -59,6 +72,7 @@
 
             $("#drag-drop-area").css("display", "none");
             $("#data-table-view").css("display", "block");
+            $("#tableNavigator").show();
 
             $.ajax({
                 url: "/app/data/get", success: function (result) {
@@ -126,7 +140,7 @@
 
                                                 var outliers = result['outliers'];
                                                 outlierArray = outliers;
-                                                fillTable();
+                                                fillTable(1);
                                             },
                                             failure: function (result) {
                                                 $("#loadingButton").hide();
@@ -195,9 +209,21 @@
             })
         });
 
-        function fillTable() {
+        function nextPage () {
+            page_no++;
+            fillTable(page_no);
+        }
+
+        function previousPage() {
+            if(page_no > 1) {
+               page_no--;
+               fillTable(page_no);
+            }
+        }
+
+        function fillTable(page_num) {
             $.ajax({
-                url: "/app/data/get", success: function (result) {
+                url: `/app/data/get?page_num=${page_num}`, success: function (result) {
                     let dataTableView = $("#data-table-view");
                     let results = JSON.parse(result);
                     console.log(results[0]);
@@ -216,8 +242,10 @@
                     for (let i = 0; i < results.length; i++) {
                         let result1 = results[i];
                         let rowHtml;
-                        if(outlierArray.includes(i)) {
-                            rowHtml = $("<tr style='background-color:red; color:white'>");
+                        if(outlierArray.includes((page_num - 1) * 20 +  i)) {
+                            console.log("Row Number");
+                            console.log((page_num - 1) * 20 +  i);
+                            rowHtml = $("<tr style='background-color:#ff3c41; color:white'>");
                         } else {
                             rowHtml = $("<tr>");
                         }

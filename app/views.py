@@ -107,7 +107,7 @@ def update_experiment_status(request):
 
 @csrf_exempt
 def get_data(request):
-    page_no = request.GET.get("page_num", 1)
+    page_no = int(request.GET.get("page_num", 1))
     print(page_no)
     datasets = Dataset.objects.all().order_by('-created_at')
     latest_dataset = datasets[0]
