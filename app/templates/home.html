@@ -3,22 +3,17 @@
 {% load crispy_forms_tags %}
 {% load render_table from django_tables2 %}
 
-{% block navigation %}
-    <li class="nav-item">
-        <a class="nav-link" href="/app/help">Help</a>
-    </li>
-{% endblock %}
-
 {% block content %}
 
     <div style="text-align: center;padding: 1.5em;">
-        <h2 style="text-align:center;display: inline-block">AutoOut: Automated Outlier Treatment</h2>
         <button class="btn btn-primary buttonload" style="display: none;float: right;" id="loadingButton">
             <i class="fa fa-circle-o-notch fa-spin"></i><span id="loadingText"></span>
         </button>
-        <button class="btn btn-primary" id="detectButton" style="float: right; display: none;">Detect</button>
-        <button class="btn btn-primary" id="treatButton" style="float: right; display: none;">Treat</button>
-        <a class="btn btn-primary" id="downloadButton" style="float: right; display: none;">Download</a>
+        <button class="btn btn-primary buttonload" id="detectButton" style="float: right; display: none;">Detect</button>
+        <button class="btn btn-primary buttonload" id="treatButton" style="float: right; display: none;">Treat</button>
+        <a class="btn btn-primary buttonload" id="downloadButton" style="float: right; display: none;">
+            <i class="fas fa-download"></i> Download</a>
+        <br/><br/>
     </div>
 
 
