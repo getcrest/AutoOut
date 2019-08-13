@@ -11,6 +11,7 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.static import serve
 from rest_framework.decorators import api_view
+import numpy as np
 
 from app.models import Dataset, Experiment, Process, ProcessStatus
 from app.outlier_treatment.main import detect_all, get_final_outliers, treat
@@ -77,7 +78,8 @@ def detect_outliers(request):
     results = delayed(detect_all)(os.path.join(settings.MEDIA_ROOT, file_path), experiment.id, settings.RESULTS_ROOT)
     dask.compute(results)
 
-    return JsonResponse({'status': 'success', 'message': 'Detection started successfully', 'experiment_id': experiment.id})
+    return JsonResponse(
+        {'status': 'success', 'message': 'Detection started successfully', 'experiment_id': experiment.id})
 
 
 @csrf_exempt
@@ -99,7 +101,7 @@ def update_experiment_status(request):
 
     if treated_file_path is not None:
         experiment.treated_file_path = treated_file_path
-        
+
     experiment.save()
 
     return JsonResponse({'status': 'success', 'message': 'Status updated successfully'})
@@ -192,7 +194,7 @@ def get_experiment_status(request):
 
         experiment = Experiment.objects.get(pk=experiment_id)
 
-        return JsonResponse({"status":"success", "experiment_status": experiment.process_status.name})
+        return JsonResponse({"status": "success", "experiment_status": experiment.process_status.name})
     else:
         return JsonResponse({'status': "failure", "message": "Invalid request"})
 
@@ -217,3 +219,29 @@ def download_treated_file(request):
     except Exception as e:
         print("Error:", e)
         return JsonResponse({'message': 'File not found'})
+
+
+@csrf_exempt
+@api_view(['GET'])
+def get_dataset_properties(request):
+    """
+    Dataset properties endpoints
+    """
+    all_datasets = Dataset.objects.all().order_by('-created_at')
+    latest_dataset = all_datasets[0]
+    dataset_name = latest_dataset.path
+    dataset_path = os.path.join(settings.MEDIA_ROOT, dataset_name)
+    filename, file_extension = os.path.splitext(dataset_path)
+
+    if file_extension == '.csv':
+        df = pd.read_csv(dataset_path)
+
+        no_samples = df.shape[0]
+        no_features = df.shape[1] - 1
+
+        no_numerical_features = df.select_dtypes(include=[np.number]).shape[1]
+        no_categorical_features = len([i for i in df.columns if df.dtypes[i] == 'object'])
+
+        return JsonResponse({"no_samples": no_samples, "no_features": no_features,
+                             "no_numerical_features": no_numerical_features,
+                             "no_categorical_features": no_categorical_features})

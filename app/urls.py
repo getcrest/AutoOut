@@ -6,6 +6,7 @@ urlpatterns = [
     url(r'^home$', views.home, name='home'),
     url(r'^file/upload$', views.upload_file, name='upload_file'),
     url(r'^data/get$', views.get_data, name='get_data'),
+    url(r'^data/properties$', views.get_dataset_properties, name='get_dataset_properties'),
     url(r'^outliers/detect$', views.detect_outliers, name='detect_outliers'),
     url(r'^outliers/get$', views.get_outliers, name='get_outliers'),
     url(r'^outliers/treat$', views.treat_outliers, name='treat_outliers'),
