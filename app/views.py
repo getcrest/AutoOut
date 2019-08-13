@@ -55,7 +55,7 @@ def upload_file(request):
                 dataset.save()
 
                 return JsonResponse({'status': 'success', 'message': 'Data uploaded successfully',
-                                     'file_path': file_name})
+                                     'file_path': file_name, "dataset_id": dataset.id})
             except Exception as e:
                 return JsonResponse({'status': 'failure', 'message': 'Error:Upload failed:{}'.format(e)})
         else:
@@ -110,16 +110,23 @@ def update_experiment_status(request):
 @csrf_exempt
 def get_data(request):
     page_no = int(request.GET.get("page_num", 1))
-    print(page_no)
-    datasets = Dataset.objects.all().order_by('-created_at')
-    latest_dataset = datasets[0]
-    dataset_name = latest_dataset.path
+    dataset_id = int(request.GET.get("dataset_id"))
+    print("Page no:", page_no)
+
+    if dataset_id is None:
+        return JsonResponse({"status": "failure", "message": "Dataset id is not provided"})
+
+    dataset = Dataset.objects.get(pk=dataset_id)
+
+    # datasets = Dataset.objects.all().order_by('-created_at')
+    # latest_dataset = datasets[0]
+    dataset_name = dataset.path
     dataset_path = os.path.join(settings.MEDIA_ROOT, dataset_name)
     filename, file_extension = os.path.splitext(dataset_path)
 
     if file_extension == '.csv':
         df = pd.read_csv(dataset_path)
-        df = df.iloc[(page_no - 1) * 20:(page_no - 1) * 20 + 19, :]
+        df = df.iloc[(page_no - 1) * 20:(page_no - 1) * 20 + 20, :]
         return JsonResponse(df.to_json(orient='records'), safe=False)
 
 
@@ -129,7 +136,7 @@ def get_outliers(request):
     experiment_id = request_obj["experiment_id"]
 
     if experiment_id is None:
-        return JsonResponse({"status": "success", "message": 'Experiment id is missing'})
+        return JsonResponse({"status": "failure", "message": 'Experiment id is missing'})
 
     experiment = Experiment.objects.get(pk=experiment_id)
     results_file_path = os.path.join(settings.RESULTS_ROOT, experiment.results_path)
@@ -153,7 +160,7 @@ def treat_outliers(request):
     experiment_id = request_obj["experiment_id"]
 
     if experiment_id is None:
-        return JsonResponse({"status": "success", "message": 'Experiment id is missing'})
+        return JsonResponse({"status": "failure", "message": 'Experiment id is missing'})
 
     experiment = Experiment.objects.get(pk=experiment_id)
     results_file_path = os.path.join(settings.RESULTS_ROOT, experiment.results_path)
@@ -227,21 +234,47 @@ def get_dataset_properties(request):
     """
     Dataset properties endpoints
     """
-    all_datasets = Dataset.objects.all().order_by('-created_at')
-    latest_dataset = all_datasets[0]
-    dataset_name = latest_dataset.path
+    dataset_id = int(request.GET.get("dataset_id"))
+    if dataset_id is None:
+        return JsonResponse({"status": "failure", "message": "Dataset id is not provided"})
+
+    dataset = Dataset.objects.get(pk=dataset_id)
+    dataset_name = dataset.path
+
     dataset_path = os.path.join(settings.MEDIA_ROOT, dataset_name)
-    filename, file_extension = os.path.splitext(dataset_path)
+    df = pd.read_csv(dataset_path)
 
-    if file_extension == '.csv':
-        df = pd.read_csv(dataset_path)
+    no_samples = df.shape[0]
+    no_features = df.shape[1] - 1
 
-        no_samples = df.shape[0]
-        no_features = df.shape[1] - 1
+    no_numerical_features = df.select_dtypes(include=[np.number]).shape[1]
+    no_categorical_features = len([i for i in df.columns if df.dtypes[i] == 'object'])
 
-        no_numerical_features = df.select_dtypes(include=[np.number]).shape[1]
-        no_categorical_features = len([i for i in df.columns if df.dtypes[i] == 'object'])
+    return JsonResponse({"no_samples": no_samples, "no_features": no_features,
+                         "no_numerical_features": no_numerical_features,
+                         "no_categorical_features": no_categorical_features})
 
-        return JsonResponse({"no_samples": no_samples, "no_features": no_features,
-                             "no_numerical_features": no_numerical_features,
-                             "no_categorical_features": no_categorical_features})
+
+"""
+Feature Engineering related APIs
+"""
+
+
+@csrf_exempt
+@api_view(['POST'])
+def add_feature(request):
+    if request.method == 'POST':
+        request_obj = json.loads(request.body.decode("utf-8"))
+        feature_name = request_obj["feature_name"]
+        dataset_id = request_obj["dataset_id"]
+
+        if feature_name is None or dataset_id is None:
+            return JsonResponse({"status": "failure", "message": "Either dataset id or feature name is not provided"})
+
+        dataset = Dataset.objects.get(pk=dataset_id)
+        deleted_features = dataset.deleted_features
+
+        deleted_features = json.loads(deleted_features)
+
+    else:
+        return JsonResponse({'status': "failure", "message": "Invalid request"})

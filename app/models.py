@@ -4,6 +4,7 @@ from django.utils import timezone
 
 class Dataset(models.Model):
     path = models.TextField(default="")
+    deleted_features = models.TextField(default="")
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
