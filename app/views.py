@@ -35,7 +35,7 @@ def upload_file(request):
                 filename, file_extension = os.path.splitext(file_name)
 
                 if not file_extension in [".csv", ".h5", '.xlxs']:
-                    return JsonResponse({"status": "failure", "message": "No file found"})
+                    return JsonResponse({"status": "failure", "message": "Unsupported file format"})
 
                 # TODO: Check for file extension here
                 if not os.path.exists(settings.MEDIA_ROOT):
@@ -126,6 +126,11 @@ def get_data(request):
 
     if file_extension == '.csv':
         df = pd.read_csv(dataset_path)
+
+        delete_features = json.loads(dataset.deleted_features)
+
+        df = df.drop([delete_features], axis=1, inplace=False)
+
         df = df.iloc[(page_no - 1) * 20:(page_no - 1) * 20 + 20, :]
         return JsonResponse(df.to_json(orient='records'), safe=False)
 
