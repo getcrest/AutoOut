@@ -9,7 +9,7 @@ urlpatterns = [
     # Data related endpoints
     url(r'^data/get$', views.get_data, name='get_data'),
     url(r'^data/properties$', views.get_dataset_properties, name='get_dataset_properties'),
-    url(r'^data/feature/delete$', views.delete_feature, name='delete_feature'),
+    url(r'^data/feature/delete$', views.add_feature, name='delete_feature'),
     url(r'^data/feature/add$', views.add_feature, name='add_feature'),
 
     # Detection and treatment related endpoints

@@ -129,7 +129,8 @@ def get_data(request):
 
         delete_features = json.loads(dataset.deleted_features)
 
-        df = df.drop([delete_features], axis=1, inplace=False)
+        if len(delete_features):
+            df = df.drop([delete_features], axis=1, inplace=False)
 
         df = df.iloc[(page_no - 1) * 20:(page_no - 1) * 20 + 20, :]
         return JsonResponse(df.to_json(orient='records'), safe=False)
