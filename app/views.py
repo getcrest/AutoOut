@@ -274,7 +274,39 @@ def add_feature(request):
         dataset = Dataset.objects.get(pk=dataset_id)
         deleted_features = dataset.deleted_features
 
-        deleted_features = json.loads(deleted_features)
+        deleted_features1 = json.loads(deleted_features)
+
+        deleted_features2 = deleted_features1.remove(feature_name)
+
+        dataset.deleted_features = deleted_features2
+        dataset.save()
+
+        return JsonResponse({"status": "success", "message": "Feature added successfully"})
+
+    else:
+        return JsonResponse({'status': "failure", "message": "Invalid request"})
+
+
+@csrf_exempt
+@api_view(['POST'])
+def delete_feature(request):
+    if request.method == 'POST':
+        request_obj = json.loads(request.body.decode("utf-8"))
+        feature_name = request_obj["feature_name"]
+        dataset_id = request_obj["dataset_id"]
+
+        if feature_name is None or dataset_id is None:
+            return JsonResponse({"status": "failure", "message": "Either dataset id or feature name is not provided"})
+
+        dataset = Dataset.objects.get(pk=dataset_id)
+        deleted_features = dataset.deleted_features
+
+        deleted_features1 = json.loads(deleted_features)
+        deleted_features2 = deleted_features1.append(feature_name)
+        dataset.deleted_features = deleted_features2
+        dataset.save()
+
+        return JsonResponse({"status": "success", "message": "Feature added successfully"})
 
     else:
         return JsonResponse({'status': "failure", "message": "Invalid request"})
