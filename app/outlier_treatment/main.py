@@ -66,7 +66,7 @@ class ZScore(object):
 
 
 # TODO: Put errors in the returned data
-def detect(file_path, space):
+def detect(file_path, space, deleted_features):
     """
     Detect outliers
     """
@@ -76,6 +76,9 @@ def detect(file_path, space):
     print("Space:", space)
 
     X = pd.read_csv(file_path)
+
+    if len(deleted_features) > 0:
+        X = X.drop(deleted_features, axis=1, inplace=False)
 
     # Basic data cleaning
     X = data_cleaning_formatting(X)
@@ -155,12 +158,13 @@ def treat(file_path, y_preds, experiment_id, media_root, voting_percentage=0.6, 
         if rows_to_remove_df.shape[0] > 0:
             X.drop(X.index[rows_to_remove_df['index']], inplace=True)
 
-        treated_file_path = os.path.join(media_root, "cleaned_csv_{}.csv".format(experiment_id))
+        treated_file_name = "cleaned_csv_{}.csv".format(experiment_id)
+        treated_file_path = os.path.join(media_root, treated_file_name)
         X.to_csv(treated_file_path)
 
         # Update server
         data = {'experiment_id': experiment_id,
-                'treated_file_path': treated_file_path,
+                'treated_file_path': treated_file_name,
                 "process_status_id": 3}
         update_server(data)
 
@@ -215,14 +219,14 @@ def calculate_scores(y_predicted, y_true):
             }
 
 
-def detect_all(file_path, experiment_id, results_path):
+def detect_all(file_path, experiment_id, results_path, deleted_features):
     if file_path is None:
         raise Exception("File path is null")
 
     try:
         delayed_list = []
         for _, space in enumerate(OUTLIER_SPACES):
-            delayed_list.append(delayed(detect)(file_path, space))
+            delayed_list.append(delayed(detect)(file_path, space, deleted_features))
 
         results = dask.compute(*delayed_list)
         results = [(r.tolist()) for r in list(results)]

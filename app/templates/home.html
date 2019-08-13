@@ -148,7 +148,7 @@
         $("#loadingButton").show();
         $("#loadingText").text("Detecting");
         $.ajax({
-            url: "/app/outliers/detect", success: function (result) {
+            url: `/app/outliers/detect?dataset_id=${datasetID}`, success: function (result) {
                 console.log("RESULTS");
                 console.log(result);
                 experiment_id = result.experiment_id;

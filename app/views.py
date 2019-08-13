@@ -6,7 +6,7 @@ import dask
 import pandas as pd
 from dask import delayed
 from django.conf import settings
-from django.http import JsonResponse, Http404
+from django.http import JsonResponse, Http404, HttpResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.static import serve
@@ -67,15 +67,25 @@ def upload_file(request):
 
 @csrf_exempt
 def detect_outliers(request):
-    dataset = Dataset.objects.all().order_by('-created_at')[0]
+    """
+    Detect outliers end point
+    """
+    dataset_id = int(request.GET.get("dataset_id"))
+
+    if dataset_id is None:
+        return JsonResponse({"status": "failure", "message": "Dataset id is not provided"})
+
+    dataset = Dataset.objects.get(pk=dataset_id)
     file_path = dataset.path
+    delete_features = json.loads(dataset.deleted_features)
 
     # Create a detection experiment and start outlier detection
     process = Process.objects.get(name='Detection')
     process_status = ProcessStatus.objects.get(name='Running')
     experiment = Experiment(dataset=dataset, process=process, process_status=process_status)
     experiment.save()
-    results = delayed(detect_all)(os.path.join(settings.MEDIA_ROOT, file_path), experiment.id, settings.RESULTS_ROOT)
+    results = delayed(detect_all)(os.path.join(settings.MEDIA_ROOT, file_path), experiment.id, settings.RESULTS_ROOT,
+                                  delete_features)
     dask.compute(results)
 
     return JsonResponse(
@@ -126,12 +136,27 @@ def get_data(request):
 
     if file_extension == '.csv':
         df = pd.read_csv(dataset_path)
+        df = df.iloc[(page_no - 1) * 20:(page_no - 1) * 20 + 20, :]
+        return JsonResponse(df.to_json(orient='records'), safe=False)
 
-        delete_features = json.loads(dataset.deleted_features)
 
-        if len(delete_features):
-            df = df.drop([delete_features], axis=1, inplace=False)
+@csrf_exempt
+def get_treated_data(request):
+    page_no = int(request.GET.get("page_num", 1))
+    experiment_id = int(request.GET.get("experiment_id"))
+    print("Page no:", page_no)
 
+    if experiment_id is None:
+        return JsonResponse({"status": "failure", "message": "Experiment id is file"})
+
+    experiment = Experiment.objects.get(pk=experiment_id)
+    treated_file_name = experiment.treated_file_path
+
+    dataset_path = os.path.join(settings.MEDIA_ROOT, treated_file_name)
+    filename, file_extension = os.path.splitext(dataset_path)
+
+    if file_extension == '.csv':
+        df = pd.read_csv(dataset_path)
         df = df.iloc[(page_no - 1) * 20:(page_no - 1) * 20 + 20, :]
         return JsonResponse(df.to_json(orient='records'), safe=False)
 
@@ -223,12 +248,18 @@ def download_treated_file(request):
     try:
         experiment = Experiment.objects.get(pk=experiment_id)
 
-        treated_file_path = experiment.treated_file_path
+        treated_file_name = experiment.treated_file_path
+        treated_file_path = os.path.join(settings.MEDIA_ROOT, treated_file_name)
 
         if not os.path.exists(treated_file_path):
             raise Http404("File not found.")
 
-        return serve(request, treated_file_path, document_root='/')
+        file_path = os.path.join(settings.MEDIA_ROOT, treated_file_name)
+        with open(file_path, 'rb') as fh:
+            response = HttpResponse(fh.read(), content_type="application/vnd.ms-excel")
+            response['Content-Disposition'] = 'inline; filename=' + os.path.basename(file_path)
+            return response
+
     except Exception as e:
         print("Error:", e)
         return JsonResponse({'message': 'File not found'})
@@ -251,14 +282,15 @@ def get_dataset_properties(request):
     df = pd.read_csv(dataset_path)
 
     no_samples = df.shape[0]
-    no_features = df.shape[1] - 1
+    no_features = df.shape[1]
 
     no_numerical_features = df.select_dtypes(include=[np.number]).shape[1]
     no_categorical_features = len([i for i in df.columns if df.dtypes[i] == 'object'])
 
     return JsonResponse({"no_samples": no_samples, "no_features": no_features,
                          "no_numerical_features": no_numerical_features,
-                         "no_categorical_features": no_categorical_features})
+                         "no_categorical_features": no_categorical_features,
+                         "deleted_features": dataset.deleted_features})
 
 
 """
