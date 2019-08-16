@@ -14,6 +14,21 @@ Step 3: python manage.py migrate
 
 Step 4: python manage.py migrate
 
+**Screenshots:**
+Upload your data:
+----------------
+![upload](https://github.com/MateLabs/AutoOut/blob/master/screenshots/upload.png)
+
+Detect Outliers:
+-----------------
+![detect](https://github.com/MateLabs/AutoOut/blob/master/screenshots/detect.png)
+
+
+Treat Outliers:
+---------------
+![treat](https://github.com/MateLabs/AutoOut/blob/master/screenshots/treat.png)
+
+
 How to contribute:
 -----------------
 Step 1: Fork
