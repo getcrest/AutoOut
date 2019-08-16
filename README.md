@@ -14,7 +14,6 @@ Step 3: python manage.py migrate
 
 Step 4: python manage.py migrate
 
-**Screenshots:**
 Upload your data:
 ----------------
 ![upload](https://github.com/MateLabs/AutoOut/blob/master/screenshots/upload.png)
