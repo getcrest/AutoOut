@@ -27,6 +27,7 @@
             border: none; /* Remove borders */
             color: white; /* White text */
             padding: 12px 24px; /* Some padding */
+            background-color: #3498db;
         }
 
         /* Add a right margin to each icon */
@@ -43,11 +44,24 @@
             padding: 0.5em;
             border: 1px solid #dee2e6;
         }
+
+        .datasetInfo h5 {
+            color: #2980b9;
+        }
+
+        /* Overriding bg-light class */
+        .bg-light {
+            background-color: #3498db !important;
+        }
+
+        .btn-primary:hover {
+            background-color: #3498db;
+        }
     </style>
 </head>
 <body>
 <nav class="navbar navbar-expand-sm bg-light navbar-light">
-    <a class="navbar-brand" href="/app/home" style="margin-left: auto; margin-right: auto;">
+    <a class="navbar-brand" href="/app/home" style="margin-left: auto; margin-right: auto;color: white;">
          <h2 style="text-align:center;display: inline-block">AutoOut: Automated Outlier Treatment</h2>
     </a>
     <ul class="navbar-nav">
