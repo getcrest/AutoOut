@@ -21,21 +21,25 @@
     <div id="drag-drop-area" style="width: 500px; height:300px; margin: auto;display: block;"></div>
 
     <div class="row datasetInfo" style="display:none;">
-        <div class="col-md-3">
-            <h4>Categorical Features</h4>
-            <span id="categoricalFeatures">Value</span>
+        <div class="col-md-2">
+            <h5>Total Samples</h5>
+            <span id="totalSamples"></span>
+        </div>
+        <div class="col-md-2">
+            <h5>Total Features</h5>
+            <span id="totalFeatures"></span>
         </div>
         <div class="col-md-3">
-            <h4>Total Features</h4>
-            <span id="totalFeatures">Value</span>
-        </div>
-        <div class="col-md-3">
-            <h4>Numerical Features</h4>
+            <h5>Numerical Features</h5>
             <span id="numericalFeatures"></span>
         </div>
         <div class="col-md-3">
-            <h4>Total Samples</h4>
-            <span id="totalSamples"></span>
+            <h5>Categorical Features</h5>
+            <span id="categoricalFeatures"></span>
+        </div>
+        <div class="col-md-2">
+            <h5>Detected Outliers</h5>
+            <span id="detectedOutliers">-</span>
         </div>
     </div>
     <br/>
@@ -55,8 +59,8 @@
 
     <div id="tableNavigator" style="display: none;">
         <br/>
-        <button class="btn btn-primary" style="float: left" onclick="previousPage()">Previous</button>
-        <button class="btn btn-primary" style="float: right" onclick="nextPage()">Next</button>
+        <button class="btn btn-primary buttonload" style="float: left" onclick="previousPage()">Previous</button>
+        <button class="btn btn-primary buttonload" style="float: right" onclick="nextPage()">Next</button>
         <br/>
         <br/>
     </div>
@@ -84,6 +88,7 @@
         uppy.use(Uppy.Dashboard, {
             target: '#drag-drop-area', inline: true,
             note: 'CSV, HDF and Excel files only. We support tabular data only!'
+
         });
         uppy.use(Uppy.XHRUpload, {endpoint: 'file/upload'});
 
@@ -138,6 +143,7 @@
                     $("#totalFeatures").text(result.no_features);
                     $("#numericalFeatures").text(result.no_numerical_features);
                     $("#totalSamples").text(result.no_samples);
+                    $("#detectedOutliers").text(result.detected_outliers);
                 },
                 failure: function (result) {
                     alert("Failed to fetch dataset properties")
