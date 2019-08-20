@@ -350,3 +350,27 @@ def delete_feature(request):
 
     else:
         return JsonResponse({'status': "failure", "message": "Invalid request"})
+
+
+@csrf_exempt
+@api_view(['GET'])
+def get_no_outliers(request):
+    experiment_id = int(request.GET.get('experiment_id'))
+
+    if experiment_id is None:
+        return JsonResponse({"status": "failure", "message": "Experiment id is missing"})
+
+    try:
+        experiment = Experiment.objects.get(pk=experiment_id)
+    except:
+        return JsonResponse({"status": "failure", "message": "Wrong experiment id"})
+
+    results_file_path = experiment.results_path
+
+    if results_file_path is None or results_file_path is "":
+        return JsonResponse({"status": "failure", "message": "Experiment data is missing"})
+
+    with open(os.path.join(settings.RESULTS_ROOT, results_file_path), 'r') as fp:
+        no_outliers = json.load(fp)
+
+        return JsonResponse({"status": "success", "no_outliers": no_outliers})

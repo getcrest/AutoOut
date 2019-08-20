@@ -16,6 +16,7 @@ urlpatterns = [
     url(r'^outliers/detect$', views.detect_outliers, name='detect_outliers'),
     url(r'^outliers/get$', views.get_outliers, name='get_outliers'),
     url(r'^outliers/treat$', views.treat_outliers, name='treat_outliers'),
+    url(r'^outliers/number$', views.get_no_outliers, name='get_no_outliers'),
 
     # Detection and treatment status endpoints
     url(r'^status/update$', views.update_experiment_status, name='update_process_status'),
