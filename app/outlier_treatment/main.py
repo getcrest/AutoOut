@@ -19,6 +19,7 @@ from sklearn.preprocessing import LabelEncoder, Normalizer
 from sklearn.svm import OneClassSVM
 import requests
 
+from app.outlier_treatment.data_loader import DataLoader
 from app.outlier_treatment.spaces import OUTLIER_SPACES
 
 
@@ -75,7 +76,8 @@ def detect(file_path, space, deleted_features):
     print("Outlier detection and treatment started ...")
     print("Space:", space)
 
-    X = pd.read_csv(file_path)
+    X = DataLoader.load(file_path)
+    # X = pd.read_csv(file_path)
 
     if len(deleted_features) > 0:
         X = X.drop(deleted_features, axis=1, inplace=False)
@@ -150,7 +152,8 @@ def treat(file_path, y_preds, experiment_id, media_root, voting_percentage=0.6, 
 
     Don't remove more than 10% of values
     """
-    X = pd.read_csv(file_path)
+    X = DataLoader.load(file_path)
+    # X = pd.read_csv(file_path)
 
     try:
         rows_to_remove_df = get_final_outliers(y_preds, voting_percentage=voting_percentage, threshold=threshold)

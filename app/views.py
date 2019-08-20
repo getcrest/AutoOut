@@ -15,6 +15,7 @@ import numpy as np
 
 from app.models import Dataset, Experiment, Process, ProcessStatus
 from app.outlier_treatment.main import detect_all, get_final_outliers, treat
+from app.outlier_treatment.data_loader import DataLoader
 
 
 @csrf_exempt
@@ -134,10 +135,10 @@ def get_data(request):
     dataset_path = os.path.join(settings.MEDIA_ROOT, dataset_name)
     filename, file_extension = os.path.splitext(dataset_path)
 
-    if file_extension == '.csv':
-        df = pd.read_csv(dataset_path)
-        df = df.iloc[(page_no - 1) * 20:(page_no - 1) * 20 + 20, :]
-        return JsonResponse(df.to_json(orient='records'), safe=False)
+    df = DataLoader.load(dataset_path)
+    # df = pd.read_csv(dataset_path)
+    df = df.iloc[(page_no - 1) * 20:(page_no - 1) * 20 + 20, :]
+    return JsonResponse(df.to_json(orient='records'), safe=False)
 
 
 @csrf_exempt
@@ -155,10 +156,10 @@ def get_treated_data(request):
     dataset_path = os.path.join(settings.MEDIA_ROOT, treated_file_name)
     filename, file_extension = os.path.splitext(dataset_path)
 
-    if file_extension == '.csv':
-        df = pd.read_csv(dataset_path)
-        df = df.iloc[(page_no - 1) * 20:(page_no - 1) * 20 + 20, :]
-        return JsonResponse(df.to_json(orient='records'), safe=False)
+    df = DataLoader.load(dataset_path)
+    # df = pd.read_csv(dataset_path)
+    df = df.iloc[(page_no - 1) * 20:(page_no - 1) * 20 + 20, :]
+    return JsonResponse(df.to_json(orient='records'), safe=False)
 
 
 @csrf_exempt
@@ -279,7 +280,8 @@ def get_dataset_properties(request):
     dataset_name = dataset.path
 
     dataset_path = os.path.join(settings.MEDIA_ROOT, dataset_name)
-    df = pd.read_csv(dataset_path)
+    df = DataLoader.load(dataset_path)
+    # df = pd.read_csv(dataset_path)
 
     no_samples = df.shape[0]
     no_features = df.shape[1]

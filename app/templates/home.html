@@ -5,128 +5,130 @@
 
 {% block content %}
 
-<div style="text-align: center;padding: 1.5em;">
-    <button class="btn btn-primary buttonload" style="display: none;float: right;" id="loadingButton">
-        <i class="fa fa-circle-o-notch fa-spin"></i><span id="loadingText"></span>
-    </button>
-    <button class="btn btn-primary buttonload" id="detectButton" style="float: right; display: none;">Detect</button>
-    <button class="btn btn-primary buttonload" id="treatButton" style="float: right; display: none;">Treat</button>
-    <a class="btn btn-primary buttonload" id="downloadButton" style="float: right; display: none;">
-        <i class="fa fa-download"></i> Download</a>
-    <br /><br />
-</div>
-
-
-<div id="drag-drop-area" style="width: 500px; height:300px; margin: auto;display: block;"></div>
-
-<div class="row datasetInfo" style="display:none;">
-    <div class="col-md-3">
-        <h4>Categorical Features</h4>
-        <span id="categoricalFeatures">Value</span>
+    <div style="text-align: center;padding: 1.5em;">
+        <button class="btn btn-primary buttonload" style="display: none;float: right;" id="loadingButton">
+            <i class="fa fa-circle-o-notch fa-spin"></i><span id="loadingText"></span>
+        </button>
+        <button class="btn btn-primary buttonload" id="detectButton" style="float: right; display: none;">Detect
+        </button>
+        <button class="btn btn-primary buttonload" id="treatButton" style="float: right; display: none;">Treat</button>
+        <a class="btn btn-primary buttonload" id="downloadButton" style="float: right; display: none;">
+            <i class="fa fa-download"></i> Download</a>
+        <br/><br/>
     </div>
-    <div class="col-md-3">
-        <h4>Total Features</h4>
-        <span id="totalFeatures">Value</span>
+
+
+    <div id="drag-drop-area" style="width: 500px; height:300px; margin: auto;display: block;"></div>
+
+    <div class="row datasetInfo" style="display:none;">
+        <div class="col-md-3">
+            <h4>Categorical Features</h4>
+            <span id="categoricalFeatures">Value</span>
+        </div>
+        <div class="col-md-3">
+            <h4>Total Features</h4>
+            <span id="totalFeatures">Value</span>
+        </div>
+        <div class="col-md-3">
+            <h4>Numerical Features</h4>
+            <span id="numericalFeatures"></span>
+        </div>
+        <div class="col-md-3">
+            <h4>Total Samples</h4>
+            <span id="totalSamples"></span>
+        </div>
     </div>
-    <div class="col-md-3">
-        <h4>Numerical Features</h4>
-        <span id="numericalFeatures"></span>
+    <br/>
+
+    <div id="data-table-view" class="table-responsive" style="display: none">
+
+        <table class="table table-hover table-bordered">
+            <thead>
+
+            </thead>
+            <tbody>
+
+            </tbody>
+        </table>
+
     </div>
-    <div class="col-md-3">
-        <h4>Total Samples</h4>
-        <span id="totalSamples"></span>
+
+    <div id="tableNavigator" style="display: none;">
+        <br/>
+        <button class="btn btn-primary" style="float: left" onclick="previousPage()">Previous</button>
+        <button class="btn btn-primary" style="float: right" onclick="nextPage()">Next</button>
+        <br/>
+        <br/>
     </div>
-</div>
-<br />
-
-<div id="data-table-view" class="table-responsive" style="display: none">
-
-    <table class="table table-hover table-bordered">
-        <thead>
-
-        </thead>
-        <tbody>
-
-        </tbody>
-    </table>
-
-</div>
-
-<div id="tableNavigator" style="display: none;">
-    <br />
-    <button class="btn btn-primary" style="float: left" onclick="previousPage()">Previous</button>
-    <button class="btn btn-primary" style="float: right" onclick="nextPage()">Next</button>
-    <br />
-    <br />
-</div>
 
 
 
 
-<script src="https://transloadit.edgly.net/releases/uppy/v1.2.0/uppy.min.js"></script>
-<script>
-    var page_no = 1;
-    var outlierArray = [];
-    var experiment_id;
-    var datasetID;
-    var uppy = Uppy.Core({
-        autoProceed: true,
-        restrictions: {
-            maxFileSize: 1000000000,
-            maxNumberOfFiles: 1,
-            minNumberOfFiles: 1,
-            allowedFileTypes: ['text/csv']
-        }
-    });
-    uppy.use(Uppy.Dashboard, {
-        target: '#drag-drop-area', inline: true,
-        note: 'CSV, Hdf, Excel files only. We support tabular data only!'
-    });
-    uppy.use(Uppy.XHRUpload, { endpoint: 'file/upload' });
-
-    
-
-    uppy.on('complete', (result) => {
-        console.log('Upload complete! We’ve uploaded these files:', result);
-
-        $("#drag-drop-area").css("display", "none");
-        $("#data-table-view").css("display", "block");
-        $("#tableNavigator").show();
-
-        datasetID = result.successful[0].response.body.dataset_id;
-        getDatasetProperties();
-        $.ajax({
-            url: `/app/data/get?dataset_id=${datasetID}`, success: function (result) {
-                let dataTableView = $("#data-table-view");
-                let results = JSON.parse(result);
-                console.log(results[0]);
-
-                // Fill column names
-                let headHtml = $("<tr>");
-                let keys = Object.keys(results[0]);
-                for (let i = 0; i < keys.length; i++) {
-                    headHtml.append("<th>" + keys[i] + "</th>");
-                }
-                headHtml.append("</tr>");
-                dataTableView.find("thead").append(headHtml);
-
-                // Fill values
-                for (let i = 0; i < results.length; i++) {
-                    let result1 = results[i];
-                    let rowHtml = $("<tr>");
-                    for (let j = 0; j < keys.length; j++) {
-                        //console.log(result1[keys[j]]);
-                        rowHtml.append($("<td>" + result1[keys[j]] + "</td>"));
-                    }
-                    rowHtml.append($("</tr>"));
-                    dataTableView.find("tbody").append(rowHtml);
-                }
-                $("#detectButton").show();
+    <script src="https://transloadit.edgly.net/releases/uppy/v1.2.0/uppy.min.js"></script>
+    <script>
+        var page_no = 1;
+        var outlierArray = [];
+        var experiment_id;
+        var datasetID;
+        var uppy = Uppy.Core({
+            autoProceed: true,
+            restrictions: {
+                maxFileSize: 1000000000,
+                maxNumberOfFiles: 1,
+                minNumberOfFiles: 1,
+                allowedFileTypes: ['text/csv', 'application/vnd.ms-excel',
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    'application/x-hdf']
             }
         });
-    });
+        uppy.use(Uppy.Dashboard, {
+            target: '#drag-drop-area', inline: true,
+            note: 'CSV, HDF and Excel files only. We support tabular data only!'
+        });
+        uppy.use(Uppy.XHRUpload, {endpoint: 'file/upload'});
 
-    function getDatasetProperties() {
+
+        uppy.on('complete', (result) => {
+            console.log('Upload complete! We’ve uploaded these files:', result);
+
+            $("#drag-drop-area").css("display", "none");
+            $("#data-table-view").css("display", "block");
+            $("#tableNavigator").show();
+
+            datasetID = result.successful[0].response.body.dataset_id;
+            getDatasetProperties();
+            $.ajax({
+                url: `/app/data/get?dataset_id=${datasetID}`, success: function (result) {
+                    let dataTableView = $("#data-table-view");
+                    let results = JSON.parse(result);
+                    console.log(results[0]);
+
+                    // Fill column names
+                    let headHtml = $("<tr>");
+                    let keys = Object.keys(results[0]);
+                    for (let i = 0; i < keys.length; i++) {
+                        headHtml.append("<th>" + keys[i] + "</th>");
+                    }
+                    headHtml.append("</tr>");
+                    dataTableView.find("thead").append(headHtml);
+
+                    // Fill values
+                    for (let i = 0; i < results.length; i++) {
+                        let result1 = results[i];
+                        let rowHtml = $("<tr>");
+                        for (let j = 0; j < keys.length; j++) {
+                            //console.log(result1[keys[j]]);
+                            rowHtml.append($("<td>" + result1[keys[j]] + "</td>"));
+                        }
+                        rowHtml.append($("</tr>"));
+                        dataTableView.find("tbody").append(rowHtml);
+                    }
+                    $("#detectButton").show();
+                }
+            });
+        });
+
+        function getDatasetProperties() {
             $.ajax({
                 url: `/app/data/properties?dataset_id=${datasetID}`,
                 success: function (result) {
@@ -143,162 +145,162 @@
             })
         }
 
-    $("#detectButton").click(() => {
-        $("#detectButton").hide();
-        $("#loadingButton").show();
-        $("#loadingText").text("Detecting");
-        $.ajax({
-            url: `/app/outliers/detect?dataset_id=${datasetID}`, success: function (result) {
-                console.log("RESULTS");
-                console.log(result);
-                experiment_id = result.experiment_id;
-                var pollId = setInterval(() => {
-                    $.ajax({
-                        url: "/app/status/get",
-                        method: "POST",
-                        data: JSON.stringify({
-                            "experiment_id": experiment_id
-                        }),
-                        success: function (result) {
-                            console.log(result);
-                            getDatasetProperties();
-                            if (result.experiment_status === "Completed") {
-                                clearInterval(pollId);
-                                $("#loadingButton").hide();
-                                $("#treatButton").show();
+        $("#detectButton").click(() => {
+            $("#detectButton").hide();
+            $("#loadingButton").show();
+            $("#loadingText").text("Detecting");
+            $.ajax({
+                url: `/app/outliers/detect?dataset_id=${datasetID}`, success: function (result) {
+                    console.log("RESULTS");
+                    console.log(result);
+                    experiment_id = result.experiment_id;
+                    var pollId = setInterval(() => {
+                        $.ajax({
+                            url: "/app/status/get",
+                            method: "POST",
+                            data: JSON.stringify({
+                                "experiment_id": experiment_id
+                            }),
+                            success: function (result) {
+                                console.log(result);
+                                getDatasetProperties();
+                                if (result.experiment_status === "Completed") {
+                                    clearInterval(pollId);
+                                    $("#loadingButton").hide();
+                                    $("#treatButton").show();
 
-                                // Colorize detected rows
-                                $.ajax({
-                                    url: "/app/outliers/get",
-                                    method: "POST",
-                                    data: JSON.stringify({
-                                        "experiment_id": experiment_id
-                                    }),
-                                    success: function (result) {
-                                        console.log(result);
+                                    // Colorize detected rows
+                                    $.ajax({
+                                            url: "/app/outliers/get",
+                                            method: "POST",
+                                            data: JSON.stringify({
+                                                "experiment_id": experiment_id
+                                            }),
+                                            success: function (result) {
+                                                console.log(result);
 
-                                        var outliers = result['outliers'];
-                                        outlierArray = outliers;
-                                        fillTable(1);
-                                    },
-                                    failure: function (result) {
-                                        $("#loadingButton").hide();
-                                    }
+                                                var outliers = result['outliers'];
+                                                outlierArray = outliers;
+                                                fillTable(1);
+                                            },
+                                            failure: function (result) {
+                                                $("#loadingButton").hide();
+                                            }
+                                        }
+                                    )
                                 }
-                                )
-                            }
-                        },
-                        failure: function (result) {
-                            $("#loadingButton").hide();
-                        }
-                    })
-                }, 5000);
-            },
-            failure: function (result) {
-                console.log("Failed to detect outliers");
-                $("#loadingButton").hide();
-                alert("Failed to detect outliers");
-            }
-        });
-    });
-
-    $("#treatButton").click(() => {
-        $("#loadingButton").show();
-        $("#loadingText").text("Treating");
-        $("#treatButton").hide();
-        $.ajax({
-            url: '/app/outliers/treat?',
-            method: 'POST',
-            data: JSON.stringify({
-                experiment_id: experiment_id
-            }),
-            contentType: "application/json",
-            success: function (result) {
-                console.log("Treat Results");
-                console.log(result.experiment_id);
-                let treatment_expr_id = result.experiment_id;
-                var pollId = setInterval(() => {
-                    $.ajax({
-                        url: "/app/status/get",
-                        method: "POST",
-                        data: JSON.stringify({
-                            "experiment_id": experiment_id
-                        }),
-                        success: function (result) {
-                            console.log(result);
-                            if (result.experiment_status === "Completed") {
-                                clearInterval(pollId);
+                            },
+                            failure: function (result) {
                                 $("#loadingButton").hide();
-                                //$("#treatButton").show();
-                                $("#downloadButton").show();
-                                $("#downloadButton").attr("href", `/app/file/download?experiment_id=${treatment_expr_id}`)
                             }
-                        },
-                        failure: function (result) {
-                            $("#loadingButton").hide();
-                        }
-                    })
-                }, 5000);
-            },
-            failure: function (result) {
-                console.log("Failed to treat outliers");
-                $("#loadingButton").hide();
-                alert("Failed to treat outliers");
-            }
-        })
-    });
+                        })
+                    }, 5000);
+                },
+                failure: function (result) {
+                    console.log("Failed to detect outliers");
+                    $("#loadingButton").hide();
+                    alert("Failed to detect outliers");
+                }
+            });
+        });
 
-    function nextPage() {
-        page_no++;
-        fillTable(page_no);
-    }
+        $("#treatButton").click(() => {
+            $("#loadingButton").show();
+            $("#loadingText").text("Treating");
+            $("#treatButton").hide();
+            $.ajax({
+                url: '/app/outliers/treat?',
+                method: 'POST',
+                data: JSON.stringify({
+                    experiment_id: experiment_id
+                }),
+                contentType: "application/json",
+                success: function (result) {
+                    console.log("Treat Results");
+                    console.log(result.experiment_id);
+                    let treatment_expr_id = result.experiment_id;
+                    var pollId = setInterval(() => {
+                        $.ajax({
+                            url: "/app/status/get",
+                            method: "POST",
+                            data: JSON.stringify({
+                                "experiment_id": experiment_id
+                            }),
+                            success: function (result) {
+                                console.log(result);
+                                if (result.experiment_status === "Completed") {
+                                    clearInterval(pollId);
+                                    $("#loadingButton").hide();
+                                    //$("#treatButton").show();
+                                    $("#downloadButton").show();
+                                    $("#downloadButton").attr("href", `/app/file/download?experiment_id=${treatment_expr_id}`)
+                                }
+                            },
+                            failure: function (result) {
+                                $("#loadingButton").hide();
+                            }
+                        })
+                    }, 5000);
+                },
+                failure: function (result) {
+                    console.log("Failed to treat outliers");
+                    $("#loadingButton").hide();
+                    alert("Failed to treat outliers");
+                }
+            })
+        });
 
-    function previousPage() {
-        if (page_no > 1) {
-            page_no--;
+        function nextPage() {
+            page_no++;
             fillTable(page_no);
         }
-    }
 
-    function fillTable(page_num) {
-        $.ajax({
-            url: `/app/data/get?page_num=${page_num}&dataset_id=${datasetID}`, success: function (result) {
-                let dataTableView = $("#data-table-view");
-                let results = JSON.parse(result);
-                console.log(results[0]);
-
-                // Fill column names
-                let headHtml = $("<tr>");
-                let keys = Object.keys(results[0]);
-                for (let i = 0; i < keys.length; i++) {
-                    headHtml.append("<th>" + keys[i] + "</th>");
-                }
-                headHtml.append("</tr>");
-                dataTableView.find("thead").html(headHtml);
-
-                // Fill values
-                dataTableView.find("tbody").html('');
-                for (let i = 0; i < results.length; i++) {
-                    let result1 = results[i];
-                    let rowHtml;
-                    if (outlierArray.includes((page_num - 1) * 20 + i)) {
-                        console.log("Row Number");
-                        console.log((page_num - 1) * 20 + i);
-                        rowHtml = $("<tr style='background-color:#ff3c41; color:white'>");
-                    } else {
-                        rowHtml = $("<tr>");
-                    }
-                    for (let j = 0; j < keys.length; j++) {
-                        //console.log(result1[keys[j]]);
-                        rowHtml.append($("<td>" + result1[keys[j]] + "</td>"));
-                    }
-                    rowHtml.append($("</tr>"));
-                    dataTableView.find("tbody").append(rowHtml);
-                }
-                //$("#detectButton").show();
+        function previousPage() {
+            if (page_no > 1) {
+                page_no--;
+                fillTable(page_no);
             }
-        });
-    }
+        }
 
-</script>
+        function fillTable(page_num) {
+            $.ajax({
+                url: `/app/data/get?page_num=${page_num}&dataset_id=${datasetID}`, success: function (result) {
+                    let dataTableView = $("#data-table-view");
+                    let results = JSON.parse(result);
+                    console.log(results[0]);
+
+                    // Fill column names
+                    let headHtml = $("<tr>");
+                    let keys = Object.keys(results[0]);
+                    for (let i = 0; i < keys.length; i++) {
+                        headHtml.append("<th>" + keys[i] + "</th>");
+                    }
+                    headHtml.append("</tr>");
+                    dataTableView.find("thead").html(headHtml);
+
+                    // Fill values
+                    dataTableView.find("tbody").html('');
+                    for (let i = 0; i < results.length; i++) {
+                        let result1 = results[i];
+                        let rowHtml;
+                        if (outlierArray.includes((page_num - 1) * 20 + i)) {
+                            console.log("Row Number");
+                            console.log((page_num - 1) * 20 + i);
+                            rowHtml = $("<tr style='background-color:#ff3c41; color:white'>");
+                        } else {
+                            rowHtml = $("<tr>");
+                        }
+                        for (let j = 0; j < keys.length; j++) {
+                            //console.log(result1[keys[j]]);
+                            rowHtml.append($("<td>" + result1[keys[j]] + "</td>"));
+                        }
+                        rowHtml.append($("</tr>"));
+                        dataTableView.find("tbody").append(rowHtml);
+                    }
+                    //$("#detectButton").show();
+                }
+            });
+        }
+
+    </script>
 {% endblock %}
