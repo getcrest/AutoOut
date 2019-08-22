@@ -187,6 +187,7 @@
 
                                                 var outliers = result['outliers'];
                                                 outlierArray = outliers;
+                                                $("#detectedOutliers").text(outlierArray.length);
                                                 fillTable(1);
                                             },
                                             failure: function (result) {
