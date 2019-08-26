@@ -6,13 +6,21 @@ With it's easy to use and simple interface you can detect and treat outliers in 
 How to Use:
 ------------
 
-Step 1: pip install -r requirements.txt
+Step 1: Install Dependencies
 
-Step 2: python manage.py makemigrations
+    >> pip install -r requirements.txt
 
-Step 3: python manage.py migrate
+Step 2: Make migrations
 
-Step 4: python manage.py migrate
+    >> python manage.py makemigrations
+
+Step 3: Create tables:
+
+    >> python manage.py migrate
+
+Step 4: Start the server
+
+    >> python manage.py runserver
 
 Upload your data:
 ----------------

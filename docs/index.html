@@ -17,64 +17,106 @@
     <link href="https://transloadit.edgly.net/releases/uppy/v1.2.0/uppy.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link href="https://fonts.googleapis.com/css?family=Quicksand&display=swap" rel="stylesheet">
+
+    <link rel="shortcut icon" href="https://raw.githubusercontent.com/MateLabs/AutoOut/master/screenshots/logo.png">
     <style>
         body {
             font-family: 'Quicksand', serif;
+        }
+
+        .container {
+            margin: 10px auto;
+        }
+
+        /* Overriding bg-light class */
+        .bg-light {
+            background-color: #3498db !important;
+        }
+
+        #screenshots img {
+            border: 1px solid #eeeeee;
+        }
+
+        .con_block{
+            background-color: #f8f9fa !important;
+            padding: 10px 20px;
+            margin: 15px auto;
+            border-radius: 5px;
+            box-shadow: 1px 1px 1px 1px #eeeeee;
         }
     </style>
 </head>
 <body>
 <nav class="navbar navbar-expand-sm bg-light navbar-light">
-    <a class="navbar-brand" style="margin-left: auto; margin-right: auto;">
-        <h2 style="text-align:center;display: inline-block">AutoOut: Documentation</h2>
+    <a class="navbar-brand" href="/app/home" style="margin-left: auto; margin-right: auto;color: white;">
+         <h2 style="text-align:center;display: inline-block">AutoOut: Documentation</h2>
     </a>
 </nav>
 </body>
 
-<div>
-AutoOut is an automated outlier detection and treatment tool that allows you to get better models with even better accuracy without writing a single line of code.
-With it's easy to use and simple interface you can detect and treat outliers in your dataset, that can help improve your final model.
-</div>
-
-<div>
-    How to Use:
-------------
-
-Step 1: pip install -r requirements.txt
-
-Step 2: python manage.py makemigrations
-
-Step 3: python manage.py migrate
-
-Step 4: python manage.py migrate
-
+<div class="container">
+    <div class="con_block">
+        <h3>What is AutOut?</h3>
+        <p>
+            AutoOut is an automated outlier detection and treatment tool that allows you to get better models with even
+            better
+            accuracy without writing a single line of code.
+            With it's easy to use and simple interface you can detect and treat outliers in your dataset, that can help
+            improve
+            your final model.
+        </p>
     </div>
 
-Upload your data:
-----------------
-![upload](https://github.com/MateLabs/AutoOut/blob/master/screenshots/upload.png)
+    <div class="con_block">
+        <h3>How to Use?</h3>
+        <ul>
+            <li>Step 1: Install Dependencies: pip install -r requirements.txt</li>
 
-Detect Outliers:
------------------
-![detect](https://github.com/MateLabs/AutoOut/blob/master/screenshots/detect.png)
+            <li>Step 2: Make migrations: python manage.py makemigrations</li>
 
+            <li>Step 4: Create tables: python manage.py migrate</li>
 
-Treat Outliers:
----------------
-![treat](https://github.com/MateLabs/AutoOut/blob/master/screenshots/treat.png)
+            <li>Step 5: Start the server: python manage.py runserver</li>
+        </ul>
+    </div>
 
+    <div id="screenshots" class="con_block">
+        <h3>Screenshots</h3>
 
-How to contribute:
------------------
-Step 1: Fork
+        <h4 style="margin-top: 10px;">1.Upload your data</h4>
+        <div class="text-center">
+            <img src="https://raw.githubusercontent.com/MateLabs/AutoOut/master/screenshots/upload.png" alt="Upload" style="max-width: 100%;"/>
+        </div>
 
-Step 2: Write your code
+        <h4 style="margin-top: 10px;">2.Detect Outliers</h4>
+        <div class="text-center">
+            <img src="https://raw.githubusercontent.com/MateLabs/AutoOut/master/screenshots/detect.png" alt="Detect" style="max-width: 100%;"/>
+        </div>
 
-Step 3: Create a pull request
+        <h4 style="margin-top: 10px;">3.Treat Outliers</h4>
+        <div class="text-center">
+            <img src="https://raw.githubusercontent.com/MateLabs/AutoOut/master/screenshots/treat.png" alt="Treat" style="max-width: 100%;"/>
+        </div>
+    </div>
 
+    <div class="con_block">
+        <h3>How to contribute</h3>
+        <ul>
+            <li>Step 1: Fork</li>
 
-Discussion Forum:
-[Gitter](https://gitter.im/Mate-Labs-AutoOut/community): Forum where all developers can interact with each other. They can discuss the code and approaches there. They can put ask questions to the core team
+            <li>Step 2: Write your code</li>
 
+            <li>Step 3: Create a pull request</li>
+        </ul>
+    </div>
 
+    <div class="con_block">
+        <h3>Discussion Forum</h3>
+        <a href="https://gitter.im/Mate-Labs-AutoOut/community">Gitter Channel</a>
+        <br/>
+        Forum where all developers can interact with each other. They can discuss the code and approaches there.
+        They can put ask questions to the core team
+    </div>
+
+</div>
 </html>
