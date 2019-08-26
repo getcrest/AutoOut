@@ -44,6 +44,6 @@ Step 2: Write your code
 
 Step 3: Create a pull request
 
-
 Discussion Forum:
+-----------------
 [Gitter](https://gitter.im/Mate-Labs-AutoOut/community): Forum where all developers can interact with each other. They can discuss the code and approaches there. They can put ask questions to the core team
