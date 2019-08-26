@@ -17,8 +17,19 @@
         <br/><br/>
     </div>
 
+    <div id="dataset_block">
+        <div id="drag-drop-area" style="width: 500px; margin: auto;display: block;"></div>
 
-    <div id="drag-drop-area" style="width: 500px; height:300px; margin: auto;display: block;"></div>
+        <h2 class="text-center" style="margin: 20px;">OR</h2>
+
+        <div>
+            <h3 class="text-center">Select a previously uploaded file</h3>
+
+            <ul class="list-group" id="dataset-list" style="width: 500px; display: block; margin:auto;">
+
+            </ul>
+        </div>
+    </div>
 
     <div class="row datasetInfo" style="display:none;">
         <div class="col-md-2">
@@ -44,7 +55,7 @@
     </div>
     <br/>
 
-    <div id="data-table-view" class="table-responsive" style="display: none">
+    <div id="data-table-view" class="table-responsive" style="display: none;">
 
         <table class="table table-hover table-bordered">
             <thead>
@@ -57,16 +68,13 @@
 
     </div>
 
-    <div id="tableNavigator" style="display: none;">
+    <div id="tableNavigator" style="display: none;margin-bottom: 20px;">
         <br/>
         <button class="btn btn-primary buttonload" style="float: left" onclick="previousPage()">Previous</button>
         <button class="btn btn-primary buttonload" style="float: right" onclick="nextPage()">Next</button>
         <br/>
         <br/>
     </div>
-
-
-
 
     <script src="https://transloadit.edgly.net/releases/uppy/v1.2.0/uppy.min.js"></script>
     <script>
@@ -87,21 +95,63 @@
         });
         uppy.use(Uppy.Dashboard, {
             target: '#drag-drop-area', inline: true,
-            note: 'CSV, HDF and Excel files only. We support tabular data only!'
-
+            note: 'CSV, HDF and Excel files only. We support tabular data only!',
+            height: 200,
+            width: 500
         });
         uppy.use(Uppy.XHRUpload, {endpoint: 'file/upload'});
-
 
         uppy.on('complete', (result) => {
             console.log('Upload complete! We’ve uploaded these files:', result);
 
-            $("#drag-drop-area").css("display", "none");
-            $("#data-table-view").css("display", "block");
-            $("#tableNavigator").show();
+            $("#dataset_block").fadeOut(300);
+            $("#data-table-view").hide().fadeIn(300);
+            $("#tableNavigator").hide().fadeIn(300);
 
             datasetID = result.successful[0].response.body.dataset_id;
             getDatasetProperties();
+            getAndPopulateData();
+        });
+
+        function get_datasets() {
+            $.ajax({
+                url: `/app/datasets`,
+                success: function (result) {
+                    console.log(result);
+                    // Populate datasets
+
+                    dataset_list = $("#dataset-list");
+                    for (i = 0; i < result.length; i++) {
+                        dataset_list.append("<li class='list-group-item' data-dataset-id=" + result[i].id + ">" + result[i].id + "-" + result[i].name + "</li>")
+                    }
+                },
+                failure: function (result) {
+                    alert("Failed to fetch datasets")
+                }
+            })
+        }
+
+        get_datasets();
+
+        function getDatasetProperties() {
+            $.ajax({
+                url: `/app/data/properties?dataset_id=${datasetID}`,
+                success: function (result) {
+                    $(".datasetInfo").hide().fadeIn(300);
+                    console.log(result);
+                    $("#categoricalFeatures").text(result.no_categorical_features);
+                    $("#totalFeatures").text(result.no_features);
+                    $("#numericalFeatures").text(result.no_numerical_features);
+                    $("#totalSamples").text(result.no_samples);
+                    $("#detectedOutliers").text(result.detected_outliers);
+                },
+                failure: function (result) {
+                    alert("Failed to fetch dataset properties")
+                }
+            })
+        }
+
+        function getAndPopulateData() {
             $.ajax({
                 url: `/app/data/get?dataset_id=${datasetID}`, success: function (result) {
                     let dataTableView = $("#data-table-view");
@@ -131,24 +181,6 @@
                     $("#detectButton").show();
                 }
             });
-        });
-
-        function getDatasetProperties() {
-            $.ajax({
-                url: `/app/data/properties?dataset_id=${datasetID}`,
-                success: function (result) {
-                    $(".datasetInfo").show();
-                    console.log(result);
-                    $("#categoricalFeatures").text(result.no_categorical_features);
-                    $("#totalFeatures").text(result.no_features);
-                    $("#numericalFeatures").text(result.no_numerical_features);
-                    $("#totalSamples").text(result.no_samples);
-                    $("#detectedOutliers").text(result.detected_outliers);
-                },
-                failure: function (result) {
-                    alert("Failed to fetch dataset properties")
-                }
-            })
         }
 
         $("#detectButton").click(() => {
@@ -308,6 +340,18 @@
                 }
             });
         }
+
+        $('body').on('click', '#dataset-list li', function () {
+            console.log($(this).text());
+
+            $("#dataset_block").fadeOut(300);
+            $("#data-table-view").hide().fadeIn(300);
+            $("#tableNavigator").hide().fadeIn(300);
+
+            datasetID = $(this).data("dataset-id");
+            getDatasetProperties();
+            getAndPopulateData();
+        });
 
     </script>
 {% endblock %}

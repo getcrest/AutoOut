@@ -23,5 +23,8 @@ urlpatterns = [
     url(r'^status/get$', views.get_experiment_status, name='get_experiment_status'),
 
     # Download the treated file
-    url(r'^file/download$', views.download_treated_file, name='download_treated_file')
+    url(r'^file/download$', views.download_treated_file, name='download_treated_file'),
+
+    # Datasets
+    url(r'^datasets$', views.get_datasets, name='get_datasets'),
 ]

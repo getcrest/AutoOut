@@ -374,3 +374,10 @@ def get_no_outliers(request):
         no_outliers = json.load(fp)
 
         return JsonResponse({"status": "success", "no_outliers": no_outliers})
+
+
+@csrf_exempt
+@api_view(['GET'])
+def get_datasets(request):
+    datasets = Dataset.objects.all()
+    return JsonResponse([{"id": dataset.id, "name": dataset.path.split("_")[-1]} for dataset in datasets], safe=False)
