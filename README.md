@@ -21,6 +21,10 @@ Step 3: Create tables:
 Step 4: Start the server
 
     >> python manage.py runserver
+    
+Step 5: Open the app in your favorite browser
+    
+    http://127.0.0.1:8000/app/home
 
 Upload your data:
 ----------------
