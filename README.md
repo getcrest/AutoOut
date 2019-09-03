@@ -8,21 +8,26 @@ How to Use:
 
 Step 1: Install Dependencies
 
-    >> pip install -r requirements.txt
+    pip install -r requirements.txt
 
 Step 2: Make migrations
 
-    >> python manage.py makemigrations
+    python manage.py makemigrations
 
 Step 3: Create tables:
 
-    >> python manage.py migrate
-
-Step 4: Start the server
-
-    >> python manage.py runserver
+    python manage.py migrate
+   
+Step 4: Seed the database
     
-Step 5: Open the app in your favorite browser
+    python manage.py loaddata app/fixtures/process_statuses.json
+    python manage.py loaddata app/fixtures/processes.json
+
+Step 5: Start the server
+
+    python manage.py runserver
+    
+Step 6: Open the app in your favorite browser
     
     http://127.0.0.1:8000/app/home
 

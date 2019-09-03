@@ -37,7 +37,7 @@
             border: 1px solid #eeeeee;
         }
 
-        .con_block{
+        .con_block {
             background-color: #f8f9fa !important;
             padding: 10px 20px;
             margin: 15px auto;
@@ -49,7 +49,7 @@
 <body>
 <nav class="navbar navbar-expand-sm bg-light navbar-light">
     <a class="navbar-brand" href="/app/home" style="margin-left: auto; margin-right: auto;color: white;">
-         <h2 style="text-align:center;display: inline-block">AutoOut: Documentation</h2>
+        <h2 style="text-align:center;display: inline-block">AutoOut: Documentation</h2>
     </a>
 </nav>
 </body>
@@ -70,15 +70,42 @@
     <div class="con_block">
         <h3>How to Use?</h3>
         <ul>
-            <li>Step 1: Install Dependencies: pip install -r requirements.txt</li>
+            <li>Step 1: Install Dependencies<br/>
+                <code>
+                    $ pip install -r requirements.txt
+                </code>
+            </li>
 
-            <li>Step 2: Make migrations: python manage.py makemigrations</li>
+            <li>Step 2: Make migrations<br/>
+                <code>
+                    $ python manage.py makemigrations
+                </code>
+            </li>
 
-            <li>Step 3: Create tables: python manage.py migrate</li>
+            <li>Step 3: Create tables <br/>
+                <code>
+                    $ python manage.py migrate
+                </code>
+            </li>
+            <li>
+                Step 4: Seed the database <br/>
+                <code>
+                    $ python manage.py loaddata app/fixtures/process_statuses.json <br/>
+                    $ python manage.py loaddata app/fixtures/processes.json
+                </code>
+            </li>
 
-            <li>Step 4: Start the server: python manage.py runserver</li>
+            <li>Step 5: Start the server <br/>
+                <code>
+                    $ python manage.py runserver
+                </code>
+            </li>
 
-            <li>Step 5: Open the app in your favorite browser: http://127.0.0.1:8000/app/home</li>
+            <li>Step 6: Open the app in your favorite browser<br/>
+                <code>
+                    $ http://127.0.0.1:8000/app/home
+                </code>
+            </li>
         </ul>
     </div>
 
@@ -87,17 +114,20 @@
 
         <h4 style="margin-top: 10px;">1.Upload your data</h4>
         <div class="text-center">
-            <img src="https://raw.githubusercontent.com/MateLabs/AutoOut/master/screenshots/upload.png" alt="Upload" style="max-width: 100%;"/>
+            <img src="https://raw.githubusercontent.com/MateLabs/AutoOut/master/screenshots/upload.png" alt="Upload"
+                 style="max-width: 100%;"/>
         </div>
 
         <h4 style="margin-top: 10px;">2.Detect Outliers</h4>
         <div class="text-center">
-            <img src="https://raw.githubusercontent.com/MateLabs/AutoOut/master/screenshots/detect.png" alt="Detect" style="max-width: 100%;"/>
+            <img src="https://raw.githubusercontent.com/MateLabs/AutoOut/master/screenshots/detect.png" alt="Detect"
+                 style="max-width: 100%;"/>
         </div>
 
         <h4 style="margin-top: 10px;">3.Treat Outliers</h4>
         <div class="text-center">
-            <img src="https://raw.githubusercontent.com/MateLabs/AutoOut/master/screenshots/treat.png" alt="Treat" style="max-width: 100%;"/>
+            <img src="https://raw.githubusercontent.com/MateLabs/AutoOut/master/screenshots/treat.png" alt="Treat"
+                 style="max-width: 100%;"/>
         </div>
     </div>
 
