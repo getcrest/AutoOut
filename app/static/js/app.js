@@ -246,17 +246,17 @@ $(document).ready(function () {
         })
     });
 
-    function nextPage() {
+    $("#nextPageButton").on('click', ()=>{
         page_no++;
         fillTable(page_no);
-    }
+    });
 
-    function previousPage() {
-        if (page_no > 1) {
+    $("#prevPageButton").on('click', ()=>{
+         if (page_no > 1) {
             page_no--;
             fillTable(page_no);
         }
-    }
+    });
 
     function fillTable(page_num) {
         $.ajax({
