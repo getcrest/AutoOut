@@ -190,6 +190,7 @@ def get_outliers(request):
 def treat_outliers(request):
     request_obj = json.loads(request.body.decode("utf-8"))
     experiment_id = request_obj["experiment_id"]
+    treat_percentage = request_obj["treat_percentage"]
 
     if experiment_id is None:
         return JsonResponse({"status": "failure", "message": 'Experiment id is missing'})
@@ -203,15 +204,14 @@ def treat_outliers(request):
     try:
         with open(results_file_path, "r") as fp:
             outliers = json.load(fp)
-            final_outliers = get_final_outliers(outliers)
-
+    
             process = Process.objects.get(name='Treatment')
             process_status = ProcessStatus.objects.get(name='Running')
             experiment2 = Experiment(dataset=experiment.dataset, process=process, process_status=process_status)
             experiment2.save()
 
             results = delayed(treat)(os.path.join(settings.MEDIA_ROOT, experiment2.dataset.path),
-                                     final_outliers, experiment2.id, settings.MEDIA_ROOT)
+                                     outliers, experiment2.id, settings.MEDIA_ROOT, treat_percentage)
             dask.compute(results)
 
             return JsonResponse(

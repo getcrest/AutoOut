@@ -6,81 +6,20 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <link rel="shortcut icon" href="{% static "images/logo_icon.png" %}">
 
-    <script
-            src="https://code.jquery.com/jquery-3.4.1.min.js"
-            integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
-            crossorigin="anonymous"></script>
-
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
-          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <link href="https://transloadit.edgly.net/releases/uppy/v1.2.0/uppy.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!-- Stylesheets -->
+    <link rel="stylesheet" type="text/css" href="{% static "css/bootstrap.min.css" %}">
+    <link rel="stylesheet" type="text/css" href="{% static "css/uppy.min.css" %}">
+    <link rel="stylesheet" type="text/css" href="{% static "css/font-awesome.min.css" %}">
     <link href="https://fonts.googleapis.com/css?family=Quicksand&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{% static "css/style.css" %}">
 
-    <link rel="shortcut icon" href="{% static "images/logo_icon.png" %}">
-
-    <style>
-        body {
-            font-family: 'Quicksand', serif;
-        }
-
-        .buttonload {
-            border: none; /* Remove borders */
-            color: white; /* White text */
-            padding: 12px 24px; /* Some padding */
-            background-color: #3498db;
-        }
-
-        /* Add a right margin to each icon */
-        .fa {
-            margin-left: -12px;
-            margin-right: 8px;
-        }
-
-        .datasetInfo {
-            margin: 0px;
-        }
-
-        .datasetInfo > div {
-            padding: 0.5em;
-            border: 1px solid #dee2e6;
-        }
-
-        .datasetInfo h5 {
-            color: #2980b9;
-        }
-
-        /* Overriding bg-light class */
-        .bg-light {
-            background-color: #3498db !important;
-        }
-
-        .btn-primary:hover {
-            background-color: #3498db;
-        }
-
-        #dataset-list{
-            cursor: pointer;
-        }
-
-        #dataset-list li:hover{
-            background-color: rgba(52, 152, 219,0.1);
-            border: none;
-        }
-
-        #data-table-view{
-            border: 1px solid #eeeeee;
-            border-radius: 2px;
-        }
-
-    </style>
 </head>
 <body>
 <nav class="navbar navbar-expand-sm bg-light navbar-light">
     <a class="navbar-brand" href="/app/home" style="margin-left: auto; margin-right: auto;color: white;">
-         <h2 style="text-align:center;display: inline-block">AutoOut: Automated Outlier Treatment</h2>
+        <h2 style="text-align:center;display: inline-block">AutoOut: Automated Outlier Treatment</h2>
     </a>
     <ul class="navbar-nav">
         {% block navigation %}
@@ -92,5 +31,12 @@
     {% block content %}
     {% endblock %}
 </div>
+
+<script type='text/javascript' src="{% static "js/jquery-3.4.1.min.js" %}"></script>
+<script type='text/javascript' src="{% static "js/bootstrap.min.js" %}"></script>
+<script type='text/javascript' src="{% static "js/bootstrap.bundle.min.js" %}"></script>
+<script type='text/javascript' src="{% static "js/uppy.min.js" %}"></script>
+<script type='text/javascript' src="{% static "js/app.js" %}"></script>
+
 </body>
 </html>

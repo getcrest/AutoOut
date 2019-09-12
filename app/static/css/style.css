@@ -1,0 +1,52 @@
+body {
+    font-family: 'Quicksand', serif;
+}
+
+.buttonload {
+    border: none; /* Remove borders */
+    color: white; /* White text */
+    padding: 12px 24px; /* Some padding */
+    background-color: #3498db;
+}
+
+/* Add a right margin to each icon */
+.fa {
+    margin-left: -12px;
+    margin-right: 8px;
+}
+
+.datasetInfo {
+    margin: 0px;
+}
+
+.datasetInfo > div {
+    padding: 0.5em;
+    border: 1px solid #dee2e6;
+}
+
+.datasetInfo h5 {
+    color: #2980b9;
+}
+
+/* Overriding bg-light class */
+.bg-light {
+    background-color: #3498db !important;
+}
+
+.btn-primary:hover {
+    background-color: #3498db;
+}
+
+#dataset-list {
+    cursor: pointer;
+}
+
+#dataset-list li:hover {
+    background-color: rgba(52, 152, 219, 0.1);
+    border: none;
+}
+
+#data-table-view {
+    border: 1px solid #eeeeee;
+    border-radius: 2px;
+}

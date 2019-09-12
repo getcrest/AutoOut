@@ -141,7 +141,7 @@ def detect(file_path, space, deleted_features):
     return y_predicted
 
 
-def treat(file_path, y_preds, experiment_id, media_root, voting_percentage=0.6, threshold=0.1):
+def treat(file_path, y_preds, experiment_id, media_root, treat_percentage=100, voting_percentage=0.6):
     """
     Treat outliers
 
@@ -156,7 +156,8 @@ def treat(file_path, y_preds, experiment_id, media_root, voting_percentage=0.6, 
     # X = pd.read_csv(file_path)
 
     try:
-        rows_to_remove_df = get_final_outliers(y_preds, voting_percentage=voting_percentage, threshold=threshold)
+        rows_to_remove_df = get_final_outliers(y_preds, treat_percentage,
+                                               voting_percentage=voting_percentage)
 
         if rows_to_remove_df.shape[0] > 0:
             X.drop(X.index[rows_to_remove_df['index']], inplace=True)
@@ -178,14 +179,12 @@ def treat(file_path, y_preds, experiment_id, media_root, voting_percentage=0.6, 
         update_server(data)
 
 
-def get_final_outliers(y_preds, voting_percentage=0.6, threshold=0.1):
+def get_final_outliers(y_preds, treat_percentage=100, voting_percentage=0.6):
     """
     Apply voting and threshold to get rows to remove
     """
     df = pd.DataFrame(y_preds)
     sum_ = df.sum(axis=1, skipna=True)
-    nrows = df.shape[0]
-
     rows_to_remove = []
 
     for i, v in enumerate(sum_.tolist()):
@@ -193,9 +192,14 @@ def get_final_outliers(y_preds, voting_percentage=0.6, threshold=0.1):
             rows_to_remove.append({"index": i, "confidence": voting_percentage * df.shape[1]})
 
     rows_to_remove_df = pd.DataFrame(rows_to_remove)
-    if rows_to_remove_df.shape[0] > threshold * nrows:
+
+    threshold = (treat_percentage * rows_to_remove_df.shape[0]) / 100
+
+    print("Threshold:{}".format(threshold))
+
+    if rows_to_remove_df.shape[0] > threshold:
         # Select only 10% rows
-        rows_to_remove_df.sort_values('confidence', ascending=False).head((int)(threshold * nrows))
+        rows_to_remove_df.sort_values('confidence', ascending=False).head((int)(threshold))
 
     return rows_to_remove_df
 
@@ -247,7 +251,7 @@ def detect_all(file_path, experiment_id, results_path, deleted_features):
             json.dump(final_results, fp)
 
         # Update server
-        data = {'experiment_id':experiment_id,
+        data = {'experiment_id': experiment_id,
                 'results_file_path': file_name,
                 "process_status_id": 3}
         update_server(data)
@@ -289,7 +293,7 @@ if __name__ == '__main__':
 
         delayed_list = []
         for index, space in enumerate(spaces):
-             delayed_list.append(delayed(detect)(data_frame, space))
+            delayed_list.append(delayed(detect)(data_frame, space))
 
         results = dask.compute(*delayed_list)
         final_results = dict(zip(range(len(list(results))), results))
