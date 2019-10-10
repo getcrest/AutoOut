@@ -1,5 +1,13 @@
 # AutoOut
 
+[![Documentation](https://img.shields.io/badge/api-reference-blue.svg)](https://matelabs.github.io/AutoOut/)
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Mate-Labs-AutoOut/community) 
+[![GitHub license](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/MateLabs/AutoOut/blob/master/LICENSE)
+[![Status](https://img.shields.io/pypi/status/ansicolortags.svg)](https://github.com/MateLabs/AutoOut)
+
+
+[![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
+
 AutoOut is an automated outlier detection and treatment tool that allows you to get better models with even better accuracy without writing a single line of code.
 With it's easy to use and simple interface you can detect and treat outliers in your dataset, that can help improve your final model.
 
@@ -56,3 +64,10 @@ Step 3: Create a pull request
 Discussion Forum:
 -----------------
 [Gitter](https://gitter.im/Mate-Labs-AutoOut/community): Forum where all developers can interact with each other. They can discuss the code and approaches there. They can put ask questions to the core team
+
+License
+-----------------
+
+[MIT License](https://github.com/MateLabs/AutoOut/blob/master/LICENSE)
+
+[Mate Labs Innovations Pvt Ltd](https://www.matelabs.ai/)
