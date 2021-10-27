@@ -4,7 +4,7 @@ bokeh==1.2.0
 celery==4.3.0
 Click==7.0
 cloudpickle==1.2.1
-dask==1.2.2
+dask==2021.10.0
 dask-glm==0.2.0
 dask-ml==1.0.0
 distributed==1.28.1
