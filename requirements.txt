@@ -1,7 +1,7 @@
 amqp==2.4.2
 billiard==3.6.0.0
 bokeh==1.2.0
-celery==4.3.0
+celery==5.2.2
 Click==7.0
 cloudpickle==1.2.1
 dask==1.2.2
