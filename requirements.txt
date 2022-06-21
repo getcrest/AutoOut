@@ -24,7 +24,7 @@ MarkupSafe==1.1.1
 msgpack==0.6.1
 multipledispatch==0.6.0
 numba==0.44.1
-numpy==1.16.4
+numpy==1.22.0
 packaging==19.0
 pandas==0.24.2
 partd==0.3.10
