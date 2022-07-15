@@ -7,7 +7,7 @@ cloudpickle==1.2.1
 dask==1.2.2
 dask-glm==0.2.0
 dask-ml==1.0.0
-distributed==1.28.1
+distributed==2021.10.0
 Django==2.2.4
 django-cors-headers==3.0.2
 django-crispy-forms==1.7.2
