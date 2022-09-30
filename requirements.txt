@@ -16,7 +16,7 @@ djangorestframework==3.9.4
 h5py==2.9.0
 HeapDict==1.0.0
 Jinja2==2.10.1
-joblib==0.13.2
+joblib==1.2.0
 kombu==4.5.0
 llvmlite==0.29.0
 locket==0.2.0
