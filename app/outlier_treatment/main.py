@@ -264,7 +264,7 @@ def detect_all(file_path, experiment_id, results_path, deleted_features):
 
 def update_server(data):
     endpoint = "http://127.0.0.1:8000/app/status/update"
-    r = requests.post(url=endpoint, data=data)
+    r = requests.post(url=endpoint, data=data, timeout=30)
     print(r.status_code)
 
 
